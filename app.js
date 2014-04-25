@@ -1,3 +1,4 @@
+var debug = require('debug')('realtime_chat:express');
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');
@@ -7,15 +8,19 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var config = require('./config');
 
 var app = express();
+
+app.set('port', config.port);
 
 app.use(favicon());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+debug('Static path set to ' + config.client.path);
+app.use(express.static(path.join(__dirname, config.client.path)));
 
 app.use('/', routes);
 app.use('/users', users);

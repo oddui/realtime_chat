@@ -1,0 +1,9 @@
+{
+  "app" : {
+    "port" : 3000
+  },
+  "client" : {
+    "name" : "basic",
+    "path" : ""
+  }
+}
