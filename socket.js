@@ -1,4 +1,4 @@
-var debug = require('debug')('realtime_chat:socket');
+var debug = require('debug')('rtc:socket');
 var socketio = require('socket.io');
 var io;
 

@@ -1,4 +1,4 @@
-var debug = require('debug')('realtime_chat:express');
+var debug = require('debug')('rtc:express');
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');
