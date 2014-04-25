@@ -1,3 +1,4 @@
+var debug = require('debug')('realtime_chat:socket');
 var socketio = require('socket.io');
 var io;
 
@@ -12,6 +13,8 @@ module.exports = function (server) {
   var numUsers = 0;
 
   io.on('connection', function (socket) {
+    debug('Socket connected ' + socket.id);
+
     var addedUser = false;
 
     // when the client emits 'new message', this listens and executes
