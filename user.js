@@ -67,7 +67,11 @@ User.prototype.join = function (room, fn) {
 
   this.room = room;
 
+  // socket.join is async
   this.socket.join(room.name, fn);
+
+  debug('%s joined room %s', this.name, this.room.name);
+
   this.socket.emit('joined', {
     numberOfUsers: this.room.users.length
   });
@@ -81,11 +85,11 @@ User.prototype.join = function (room, fn) {
 User.prototype.leave = function (fn) {
   if (!!this.room) {
 
-    this.socket.leave(this.room.name, fn);
-
     // remove this user from room's users list
     this.room.removeUser(this);
 
+    // socket.leave is async
+    this.socket.leave(this.room.name, fn);
 
     debug('%s left room %s', this.name, this.room.name);
 
