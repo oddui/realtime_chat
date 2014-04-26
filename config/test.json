@@ -1,6 +1,6 @@
 {
   "app" : {
-    "port" : 3000
+    "port" : 3001
   },
   "client" : {
     "name" : "basic",

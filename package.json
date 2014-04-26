@@ -13,5 +13,9 @@
     "morgan": "~1.0.0",
     "socket.io": "https://github.com/LearnBoost/socket.io/archive/1.0.0-pre.tar.gz",
     "static-favicon": "~1.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^1.18.2",
+    "socket.io-client": "https://github.com/LearnBoost/socket.io-client/archive/1.0.0-pre.tar.gz"
   }
 }

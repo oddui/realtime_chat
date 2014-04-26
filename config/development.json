@@ -3,7 +3,7 @@
     "port" : 3000
   },
   "client" : {
-    "name" : "durarara",
-    "path" : "app"
+    "name" : "basic",
+    "path" : "dist"
   }
 }
