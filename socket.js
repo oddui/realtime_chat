@@ -43,7 +43,7 @@ module.exports = function (server) {
     socket.on('typing', function () {
       if (!!user) {
         user.broadcast('typing', {
-          username: socket.username
+          username: user.name
         });
       }
     });
@@ -52,7 +52,7 @@ module.exports = function (server) {
     socket.on('stop typing', function () {
       if (!!user) {
         user.broadcast('stop typing', {
-          username: socket.username
+          username: user.name
         });
       }
     });
