@@ -57,7 +57,7 @@ User.prototype.broadcast = function (event, data) {
   return this;
 };
 
-User.prototype.join = function (room) {
+User.prototype.join = function (room, fn) {
 
   // leave current room if possible
   this.leave();
@@ -67,7 +67,7 @@ User.prototype.join = function (room) {
 
   this.room = room;
 
-  this.socket.join(room.name);
+  this.socket.join(room.name, fn);
   this.socket.emit('joined', {
     numberOfUsers: this.room.users.length
   });
@@ -78,10 +78,10 @@ User.prototype.join = function (room) {
   });
 };
 
-User.prototype.leave = function () {
+User.prototype.leave = function (fn) {
   if (!!this.room) {
 
-    this.socket.leave(this.room.name);
+    this.socket.leave(this.room.name, fn);
 
     // remove this user from room's users list
     this.room.removeUser(this);

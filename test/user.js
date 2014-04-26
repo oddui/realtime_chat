@@ -7,17 +7,19 @@ var User = require('../user.js');
 var Room = require('../room.js');
 
 describe('User', function(){
-  var server, client, socket;
+  var httpServer, server, client, socket;
   var firstUser, firstRoom;
 
   before(function (done) {
-    server = http.createServer();
+    httpServer = http.createServer();
 
-    ioserver(server).on('connection', function (s) {
+    server = ioserver(httpServer);
+
+    server.on('connection', function (s) {
       socket = s;
     });
 
-    server.listen(config.port, function () {
+    httpServer.listen(config.port, function () {
 
       client = ioclient('http://localhost:'+config.port);
 
@@ -37,7 +39,7 @@ describe('User', function(){
     } else {
       console.log('no connection to break...');
     }
-    server.close(done);
+    httpServer.close(done);
   });
 
   beforeEach(function () {
@@ -46,6 +48,9 @@ describe('User', function(){
   });
 
   afterEach(function () {
+    User.getAll().forEach(function (user) {
+      user.leave();
+    });
     User.getAll().length = 0;
     Room.getAll().length = 0;
   });
@@ -81,6 +86,12 @@ describe('User', function(){
       assert.equal(firstUser.room, firstRoom);
       assert.notEqual(-1, firstRoom.getUsers().indexOf(firstUser));
     });
+    it('socket should join a room', function(done){
+      firstUser.join(firstRoom, function () {
+        assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom.name));
+        done();
+      });
+    });
     it('should first leave the room if user already in a room', function(){
       firstUser.join(firstRoom);
 
@@ -99,6 +110,16 @@ describe('User', function(){
       firstUser.leave();
       assert.equal(firstUser.room, undefined);
       assert.equal(-1, firstRoom.getUsers().indexOf(firstUser));
+    });
+    it('socket should leave a room', function(done){
+      firstUser.join(firstRoom, function () {
+        assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom.name));
+
+        firstUser.leave(function () {
+          assert.equal(-1, firstUser.socket.rooms.indexOf(firstRoom.name));
+          done();
+        });
+      });
     });
   });
 
