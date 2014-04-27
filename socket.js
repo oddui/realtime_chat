@@ -19,7 +19,8 @@ module.exports = function (server) {
       try {
         user = new User(socket, username);
         user.socket.emit('new_user_response', {
-          success: true
+          success: true,
+          name: username
         });
       } catch (e) {
         socket.emit('new_user_response', {
@@ -32,7 +33,7 @@ module.exports = function (server) {
     socket.on('new_room', function (roomname) {
       if (!!user) {
         try {
-          new Room(req.body.name);
+          new Room(roomname);
           user.socket.emit('new_room_response', {
             success: true,
           });
@@ -75,7 +76,8 @@ module.exports = function (server) {
 
         user.leave(function () {
           user.broadcast('user_left', {
-            username: user.name
+            username: user.name,
+            numberOfUsers: room.users.length
           }, room.name);
         });
       }
@@ -112,7 +114,17 @@ module.exports = function (server) {
     // when the user disconnects.. perform this
     socket.on('disconnect', function () {
       if (!!user) {
-        user.disconnect();
+        var room = user.room;
+        if (!!room) {
+          user.leave(function () {
+            user.broadcast('user_left', {
+              username: user.name,
+              numberOfUsers: room.users.length
+            }, room.name);
+
+            user.disconnect();
+          });
+        }
       }
     });
   });

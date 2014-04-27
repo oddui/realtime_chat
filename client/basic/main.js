@@ -37,17 +37,11 @@ $(function() {
 
   // Sets the client's username
   function setUsername () {
-    username = cleanInput($usernameInput.val().trim());
-
-    // If the username is valid
-    if (username) {
-      $loginPage.fadeOut();
-      $chatPage.show();
-      $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
-
+    var name = cleanInput($usernameInput.val().trim());
+    // If the name is valid
+    if (name) {
       // Tell the server your username
-      socket.emit('add user', username);
+      socket.emit('new_user', name);
     }
   }
 
@@ -56,8 +50,6 @@ $(function() {
     var message = $inputMessage.val();
     // Prevent markup from being injected into the message
     message = cleanInput(message);
-    console.log(message);
-    console.log(connected);
     // if there is a non-empty message and a socket connection
     if (message && connected) {
       console.log('sending...');
@@ -67,7 +59,7 @@ $(function() {
         message: message
       });
       // tell server to execute 'new message' and send along one parameter
-      socket.emit('new message', message);
+      socket.emit('new_message', message);
     }
   }
 
@@ -164,7 +156,7 @@ $(function() {
         var typingTimer = (new Date()).getTime();
         var timeDiff = typingTimer - lastTypingTime;
         if (timeDiff >= TYPING_TIMER_LENGTH && typing) {
-          socket.emit('stop typing');
+          socket.emit('stop_typing');
           typing = false;
         }
       }, TYPING_TIMER_LENGTH);
@@ -201,7 +193,7 @@ $(function() {
     if (event.which === 13) {
       if (username) {
         sendMessage();
-        socket.emit('stop typing');
+        socket.emit('stop_typing');
         typing = false;
       } else {
         setUsername();
@@ -227,30 +219,56 @@ $(function() {
 
   // Socket events
 
-  // Whenever the server emits 'login', log the login message
-  socket.on('joined', function (data) {
-    connected = true;
-    // Display the welcome message
-    var message = "Welcome to Socket.IO Chat &mdash; ";
-    log(message, {
-      prepend: true
-    });
-    addParticipantsMessage(data);
+  socket.on('new_user_response', function (data) {
+    if (data.success) {
+      username = data.name;
+
+      $loginPage.fadeOut();
+      $chatPage.show();
+      $loginPage.off('click');
+      $currentInput = $inputMessage.focus();
+
+      // join basic room
+      socket.emit('join', 'Basic');
+
+    } else {
+      alert(data.message);
+    }
+  });
+
+  socket.on('join_response', function (data) {
+    if (data.success) {
+      connected = true;
+      // Display the welcome message
+      var message = "Welcome to Realtime Chat &mdash; ";
+      log(message, {
+        prepend: true
+      });
+      addParticipantsMessage(data);
+    } else {
+      // create basic room
+      socket.emit('new_room', 'Basic');
+      socket.once('new_room_response', function (data) {
+        if (data.success) {
+          socket.emit('join', 'Basic');
+        }
+      });
+    }
   });
 
   // Whenever the server emits 'new message', update the chat body
-  socket.on('new message', function (data) {
+  socket.on('new_message', function (data) {
     addChatMessage(data);
   });
 
   // Whenever the server emits 'user joined', log it in the chat body
-  socket.on('user joined', function (data) {
+  socket.on('user_joined', function (data) {
     log(data.username + ' joined');
     addParticipantsMessage(data);
   });
 
   // Whenever the server emits 'user left', log it in the chat body
-  socket.on('user left', function (data) {
+  socket.on('user_left', function (data) {
     log(data.username + ' left');
     addParticipantsMessage(data);
     removeChatTyping(data);
@@ -262,7 +280,7 @@ $(function() {
   });
 
   // Whenever the server emits 'stop typing', kill the typing message
-  socket.on('stop typing', function (data) {
+  socket.on('stop_typing', function (data) {
     removeChatTyping(data);
   });
 });

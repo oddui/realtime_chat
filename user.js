@@ -50,6 +50,7 @@ User.prototype.disconnect = function () {
 User.prototype.echo = function (event, data) {
   if (!!this.socket) {
     this.socket.emit(event, data);
+    debug('%s echo: %s', this.name, event);
     return this;
   }
 
@@ -62,6 +63,7 @@ User.prototype.broadcast = function (event, data, to) {
 
   if (!!this.socket || !!to) {
     this.socket.broadcast.to(to).emit(event, data);
+    debug('%s broadcast to %s: %s', this.name, to, event);
     return this;
   }
 
