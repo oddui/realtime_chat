@@ -81,10 +81,12 @@ describe('User', function(){
   });
 
   describe('#join()', function(){
-    it('should join a room', function(){
-      firstUser.join(firstRoom);
-      assert.equal(firstUser.room, firstRoom);
-      assert.notEqual(-1, firstRoom.getUsers().indexOf(firstUser));
+    it('should join a room', function(done){
+      firstUser.join(firstRoom, function () {
+        assert.equal(firstUser.room, firstRoom);
+        assert.notEqual(-1, firstRoom.getUsers().indexOf(firstUser));
+        done();
+      });
     });
     it('socket should join a room', function(done){
       firstUser.join(firstRoom, function () {
@@ -92,24 +94,29 @@ describe('User', function(){
         done();
       });
     });
-    it('should first leave the room if user already in a room', function(){
-      firstUser.join(firstRoom);
+    it('should first leave the room if user already in a room', function(done){
+      firstUser.join(firstRoom, function () {
 
-      var anotherRoom = new Room('Kingsville');
-      firstUser.join(anotherRoom);
-      assert.equal(firstUser.room, anotherRoom);
-      assert.notEqual(-1, anotherRoom.getUsers().indexOf(firstUser), 'user should in another room');
-      assert.equal(-1, firstRoom.getUsers().indexOf(firstUser), 'user should not in first room');
+        var anotherRoom = new Room('Kingsville');
+        firstUser.join(anotherRoom, function () {
+          assert.equal(firstUser.room, anotherRoom);
+          assert.notEqual(-1, anotherRoom.getUsers().indexOf(firstUser), 'user should in another room');
+          assert.equal(-1, firstRoom.getUsers().indexOf(firstUser), 'user should not in first room');
+          done();
+        });
+      });
     });
   });
 
   describe('#leave()', function(){
-    it('should leave a room', function(){
-      firstUser.join(firstRoom);
-
-      firstUser.leave();
-      assert.equal(firstUser.room, undefined);
-      assert.equal(-1, firstRoom.getUsers().indexOf(firstUser));
+    it('should leave a room', function(done){
+      firstUser.join(firstRoom, function () {
+        firstUser.leave(function () {
+          assert.equal(firstUser.room, undefined);
+          assert.equal(-1, firstRoom.getUsers().indexOf(firstUser));
+          done();
+        });
+      });
     });
     it('socket should leave a room', function(done){
       firstUser.join(firstRoom, function () {

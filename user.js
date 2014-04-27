@@ -47,13 +47,25 @@ User.prototype.disconnect = function () {
   return this;
 };
 
-User.prototype.broadcast = function (event, data) {
-  if (!!this.socket && !!this.room) {
-    this.socket.broadcast.to(this.room.name).emit(event, data);
+User.prototype.echo = function (event, data) {
+  if (!!this.socket) {
+    this.socket.emit(event, data);
     return this;
   }
 
-  debug('broadcast failed: socket: %s, room: %s', this.socket, this.room);
+  debug('echo failed: socket: %s', this.socket);
+  return this;
+};
+
+User.prototype.broadcast = function (event, data, to) {
+  to = to || this.room.name;
+
+  if (!!this.socket || !!to) {
+    this.socket.broadcast.to(to).emit(event, data);
+    return this;
+  }
+
+  debug('broadcast failed: socket: %s, to: %s', this.socket, to);
   return this;
 };
 
@@ -62,43 +74,37 @@ User.prototype.join = function (room, fn) {
   // leave current room if possible
   this.leave();
 
-  // add this user to room's users list
-  room.addUser(this);
-
-  this.room = room;
-
   // socket.join is async
-  this.socket.join(room.name, fn);
+  var user = this;
+  this.socket.join(room.name, function () {
 
-  debug('%s joined room %s', this.name, this.room.name);
+    user.room = room;
+    room.addUser(user);
 
-  this.socket.emit('joined', {
-    numberOfUsers: this.room.users.length
+    debug('%s joined room %s', user.name, user.room.name);
+
+    if (!!fn) fn.call(user);
   });
 
-  return this.broadcast('user joined', {
-    username: this.name,
-    numberOfUsers: this.room.users.length
-  });
+  return this;
 };
 
 User.prototype.leave = function (fn) {
   if (!!this.room) {
 
-    // remove this user from room's users list
-    this.room.removeUser(this);
-
     // socket.leave is async
-    this.socket.leave(this.room.name, fn);
+    var user = this;
+    this.socket.leave(this.room.name, function () {
 
-    debug('%s left room %s', this.name, this.room.name);
+      var room = user.room;
 
-    this.broadcast('user left', {
-      username: this.name,
-      numberOfUsers: this.room.users.length
+      user.room.removeUser(user);
+      user.room = undefined;
+
+      debug('%s left room %s', user.name, room.name);
+
+      if (!!fn) fn.call(user);
     });
-
-    this.room = undefined;
   }
 
   return this;
