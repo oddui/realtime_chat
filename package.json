@@ -11,6 +11,7 @@
     "debug": "~0.7.4",
     "express": "~4.0.0",
     "morgan": "~1.0.0",
+    "nedb": "^0.10.5",
     "socket.io": "https://github.com/LearnBoost/socket.io/archive/1.0.0-pre.tar.gz",
     "static-favicon": "~1.0.0"
   },
