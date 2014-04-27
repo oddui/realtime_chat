@@ -21,4 +21,16 @@ router.get('/', function(req, res) {
   res.json(rooms);
 });
 
+/* Create a new room */
+router.post('/', function(req, res) {
+  try {
+    new Room(req.body.name);
+    res.send(200);
+  } catch (e) {
+    res.json(409, {
+      message: e.message
+    });
+  }
+});
+
 module.exports = router;

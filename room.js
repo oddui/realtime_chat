@@ -15,6 +15,8 @@ var Room = function (name, lang, capacity) {
   this.users = [];
 
   rooms.push(this);
+
+  debug('created new room: %s', this.name);
 };
 
 Room.getAll = function () {
