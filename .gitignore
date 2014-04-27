@@ -4,5 +4,6 @@ dist
 .sass-cache
 bower_components
 *.log
+db
 
 .DS_Store

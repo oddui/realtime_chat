@@ -1,4 +1,11 @@
 var debug = require('debug')('rtc:room');
+var Datastore = require('nedb');
+
+// rooms data store
+var rooms = new Datastore({
+  filename: 'db/rooms.db',
+  autoload: true,
+});
 
 // rooms data store
 var rooms = [];

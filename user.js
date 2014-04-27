@@ -1,4 +1,11 @@
 var debug = require('debug')('rtc:user');
+var Datastore = require('nedb');
+
+// users data store
+var users = new Datastore({
+  filename: 'db/users.db',
+  autoload: true,
+});
 
 // users data store
 var users = [];
