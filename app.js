@@ -1,4 +1,4 @@
-var debug = require('debug')('rtc:express');
+var debug = require('debug')('rtc:app');
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');
