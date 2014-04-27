@@ -4,6 +4,6 @@
   },
   "client" : {
     "name" : "basic",
-    "path" : "dist"
+    "path" : ""
   }
 }
