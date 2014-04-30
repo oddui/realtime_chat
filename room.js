@@ -1,81 +1,141 @@
 var debug = require('debug')('rtc:room');
+var util = require('util');
+var async = require('async');
+var config = require('./config');
 var Datastore = require('nedb');
+var User;
 
 // rooms data store
 var rooms = new Datastore({
-  filename: 'db/rooms.db',
+  filename: config.db.rooms,
   autoload: true,
 });
 
-// rooms data store
-var rooms = [];
-
-var Room = function (name, lang, capacity) {
-  // make sure room names are unique
-  if (Room.getByName(name)) {
-    throw new Error('room already exists');
-  }
-
-  this.name = name;
-  this.lang = lang || 'en';
-  this.capacity = capacity || 5;
-  this.users = [];
-
-  rooms.push(this);
-
-  debug('created new room: %s', this.name);
+var Room = function (doc) {
+  this._id = doc._id;
+  this.name = doc.name;
+  this.lang = doc.lang || 'en';
+  this.capacity = doc.capacity || 5;
 };
 
-Room.getAll = function () {
-  return rooms;
+Room.setup = function (dep) {
+  // dependency injection
+  // to avoid circular require calls
+  User = dep;
 };
 
-Room.getByName = function (name) {
-  var result;
-  rooms.forEach(function (room) {
-    if (room.name === name) {
-      result = room;
+Room.getById = function (_id, fn) {
+  rooms.findOne({ _id: _id}, function (err, doc) {
+    if (err) return fn(err);
+
+    if (doc) {
+      fn(err, new Room(doc));
+    } else {
+      fn(err);
     }
   });
-  return result;
 };
 
-Room.prototype.getUsers = function () {
-  return this.users;
+Room.get = function (fields, fn) {
+  rooms.find(fields, function (err, docs) {
+    if (err) return fn(err);
+
+    var rooms = docs.map(function (doc) {
+      return new Room(doc);
+    });
+    fn(err, rooms);
+  });
 };
 
-Room.prototype.addUser = function (user) {
-  if (this.users.length < this.capacity) {
-    this.users.push(user);
-    debug('room %s added user %s, %d/%d', this.name, user.name, this.users.length, this.capacity);
+Room.getAll = function (fn) {
+  this.get({}, function (err, rooms) {
+    if (err) return fn(err);
+    fn(err, rooms);
+  });
+};
 
-    return this;
+Room.getByName = function (name, fn) {
+  this.get({name: name}, function (err, rooms) {
+    if (err) return fn(err);
+    fn(err, rooms);
+  });
+};
+
+Room.deleteById = function(_id, fn) {
+  rooms.remove({_id: _id}, {}, function (err, numRemoved) {
+    if (err) return fn(err);
+    debug('%d room(s) deleted', numRemoved);
+    if (fn) fn(err, numRemoved);
+  });
+};
+
+Room.deleteAll = function(fn) {
+  rooms.remove({}, {multi: true}, function (err, numRemoved) {
+    if (err) return fn(err);
+    debug('%d room(s) deleted', numRemoved);
+    if (fn) fn(err, numRemoved);
+  });
+};
+
+Room.prototype.save = function (fn) {
+  var self = this;
+
+  if (!self._id) {
+    // insert
+    rooms.insert({
+      name: self.name,
+      lang: self.lang,
+      capacity: self.capacity,
+    }, function (err, doc) {
+      if (err) return fn(err);
+      debug('room %s saved', doc.name);
+
+      self._id = doc._id;
+      fn(err, doc);
+    });
+  } else {
+    // update
+    rooms.update({_id: self._id}, {
+      name: self.name,
+      lang: self.lang,
+      capacity: self.capacity,
+    }, {}, function (err, numUpdated) {
+      if (err) return fn(err);
+      debug('room %s updated', self.name);
+
+      fn(err, numUpdated);
+    });
   }
 
-  debug('room full');
   return this;
 };
 
-Room.prototype.removeUser = function (user) {
-  this.users.splice(this.users.indexOf(user), 1);
-  debug('room %s removed user %s, %d/%d', this.name, user.name, this.users.length, this.capacity);
-
-  // close room if possible
-  this.close();
-
-  return this;
-};
-
-Room.prototype.close = function () {
-
-  if (this.users.length === 0) {
-    // remove this room from data store
-    rooms.splice(rooms.indexOf(this), 1);
-    return this;
+Room.prototype.destroy = function (fn) {
+  if (this._id) {
+    Room.deleteById(this._id, fn);
   }
+};
 
-  debug('cannot close, room not empty');
-  return this;
+Room.prototype.getUsers = function (fn) {
+  User.get({room_id: this._id}, fn.bind(this));
+};
+
+Room.prototype.close = function (fn) {
+  var self = this;
+
+  self.getUsers(function (err, users) {
+    if (err) return fn(err);
+
+    if (users.length === 0) {
+      self.destroy(function (err, numRemoved) {
+        debug('room closed');
+        if (fn) fn(err, numRemoved);
+      });
+    } else {
+      debug('cannot close, room not empty');
+      if (fn) process.nextTick(fn.bind(self));
+    }
+  });
 };
 
 module.exports = Room;

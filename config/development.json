@@ -2,6 +2,10 @@
   "app" : {
     "port" : 3000
   },
+  "db" : {
+    "users" : "db/users.development.db",
+    "rooms" : "db/rooms.development.db"
+  },
   "client" : {
     "name" : "basic",
     "path" : ""
