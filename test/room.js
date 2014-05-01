@@ -72,7 +72,7 @@ describe('Room', function(){
     });
   });
 
-  describe('::deleteAll()', function(){
+  describe('::deleteAll()', function () {
     it('should delete all rooms from data store', function (done) {
       // save a new room
       (new Room({name: 'Kingsville'})).save(function () {
@@ -157,19 +157,26 @@ describe('Room', function(){
   });
 
   describe('#close()', function () {
-    it('should be able to close an empty room', function (done) {
+    it('should be able to close an empty non-permanent room', function (done) {
       firstRoom.close(function (err, numRemoved) {
         assert.equal(numRemoved, 1);
         done();
       });
     });
-    it('should not be able to close a non-empty room', function (done) {
+    it('should not close a non-empty room', function (done) {
       firstUser.room_id = firstRoom._id;
       firstUser.save(function () {
         firstRoom.close(function (err, numRemoved) {
           assert.notEqual(numRemoved, 1);
           done();
         });
+      });
+    });
+    it('should not close a permanent room', function (done) {
+      firstRoom.permanent = true;
+      firstRoom.close(function (err, numRemoved) {
+        assert.notEqual(numRemoved, 0);
+        done();
       });
     });
   });

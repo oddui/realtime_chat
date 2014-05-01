@@ -16,6 +16,7 @@ var Room = function (doc) {
   this.name = doc.name;
   this.lang = doc.lang || 'en';
   this.capacity = doc.capacity || 5;
+  this.permanent = doc.permanent || false;
 };
 
 Room.setup = function (dep) {
@@ -82,27 +83,18 @@ Room.prototype.save = function (fn) {
 
   if (!self._id) {
     // insert
-    rooms.insert({
-      name: self.name,
-      lang: self.lang,
-      capacity: self.capacity,
-    }, function (err, doc) {
+    rooms.insert(self, function (err, doc) {
       if (err) return fn(err);
-      debug('room %s saved', doc.name);
 
       self._id = doc._id;
+      debug('room %s saved', doc.name);
       fn(err, doc);
     });
   } else {
     // update
-    rooms.update({_id: self._id}, {
-      name: self.name,
-      lang: self.lang,
-      capacity: self.capacity,
-    }, {}, function (err, numUpdated) {
+    rooms.update({_id: self._id}, self, {}, function (err, numUpdated) {
       if (err) return fn(err);
       debug('room %s updated', self.name);
-
       fn(err, numUpdated);
     });
   }
@@ -126,13 +118,14 @@ Room.prototype.close = function (fn) {
   self.getUsers(function (err, users) {
     if (err) return fn(err);
 
-    if (users.length === 0) {
+    if (users.length === 0 && !self.permanent) {
+      // destroy room if room is empty not permanent
       self.destroy(function (err, numRemoved) {
         debug('room closed');
         if (fn) fn(err, numRemoved);
       });
     } else {
-      debug('cannot close, room not empty');
+      debug('cannot close, room not empty or is permanent');
       if (fn) process.nextTick(fn.bind(self));
     }
   });

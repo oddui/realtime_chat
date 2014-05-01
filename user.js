@@ -16,6 +16,7 @@ var User = function (doc, socket) {
   this._id = doc._id;
   this.name = doc.name;
   this.room_id = doc.room_id;
+  this.permanent = doc.permanent || false;
   this.connect(socket);
 };
 
@@ -129,11 +130,12 @@ User.prototype.populate = function (fn) {
 
   if (self.room_id && !(self.room instanceof Room)) {
     Room.getById(self.room_id, function (err, room) {
+      if (err) return fn.call(self, err);
       // TODO: what about room not found
       //
       self.room = room;
       debug('%s populated, room name: %s', self.name, room.name);
-      if (fn) fn(undefined, self);
+      if (fn) fn.call(self, err, self);
     });
   } else {
     if (fn) process.nextTick(fn.bind(self, undefined, self));
@@ -164,9 +166,15 @@ User.prototype.connect = function (socket) {
 };
 
 User.prototype.disconnect = function (fn) {
-  return this.leave(function () {
+  return this.leave(function (err) {
+    if (err) return fn.call(this, err);
+
     this.socket = undefined;
-    if (fn) fn.call(this);
+    if (!this.permanent) {
+      this.destroy(fn.bind(this));
+    } else {
+      if (fn) fn.call(this);
+    }
   });
 };
 
@@ -224,13 +232,16 @@ User.prototype.leave = function (fn) {
           debug('%s left room %s', self.name, room.name);
           if (fn) fn.call(self);
 
-          // TODO: close room is room is temp room
+          // close room if possible
+          room.close();
         });
       });
     };
 
     // populate room object if possible
-    this.populate(function () {
+    this.populate(function (err) {
+      if (err) return fn.call(self, err);
+
       leave();
     });
 

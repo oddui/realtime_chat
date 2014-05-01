@@ -217,22 +217,42 @@ describe('User', function(){
   });
 
   describe('#disconnect()', function () {
-    beforeEach(function (done) {
-      firstUser.room_id = firstRoom._id;
-      firstUser.save(function () {
-        firstUser.disconnect(function () {
+    describe('permament user', function () {
+      beforeEach(function (done) {
+        firstUser.permanent = true;
+        firstUser.room_id = firstRoom._id;
+        firstUser.save(function () {
+          firstUser.disconnect(function () {
+            done();
+          });
+        });
+      });
+
+      it('should disconnect socket', function () {
+        assert.equal(firstUser.socket, undefined);
+      });
+      it('should leave room', function (done) {
+        User.getById(firstUser._id, function (err, user) {
+          assert.equal(user.room_id, undefined);
           done();
         });
       });
     });
 
-    it('should disconnect socket', function () {
-      assert.equal(firstUser.socket, undefined);
-    });
-    it('should leave room', function (done) {
-      User.getById(firstUser._id, function (err, user) {
-        assert.equal(user.room_id, undefined);
-        done();
+    describe('non-permament user', function () {
+      beforeEach(function (done) {
+        firstUser.room_id = firstRoom._id;
+        firstUser.save(function () {
+          firstUser.disconnect(function () {
+            done();
+          });
+        });
+      });
+      it('should destroy itself if not permanent', function (done) {
+        User.getById(firstUser._id, function (err, user) {
+          assert(!user);
+          done();
+        });
       });
     });
   });
