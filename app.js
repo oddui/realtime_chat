@@ -5,6 +5,7 @@ var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var jwt = require('express-jwt');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -20,8 +21,9 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
-debug('Static path set to ' + config.client.path);
+app.use(jwt({ secret: 'secret', skip: ['users/login']}));
 app.use(express.static(path.join(__dirname, config.client.path)));
+debug('Static path set to ' + config.client.path);
 
 app.use('/', routes);
 app.use('/users', users);
