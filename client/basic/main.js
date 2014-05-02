@@ -1,18 +1,13 @@
 $(function() {
   var FADE_TIME = 150; // ms
-  var COLORS = [
-    '#e21400', '#91580f', '#f8a700', '#f78b00',
-    '#58dc00', '#287b00', '#a8f07a', '#4ae8c4',
-    '#3b88eb', '#3824aa', '#a700ff', '#d300e7'
-  ];
 
   // Initialize varibles
   var $window = $(window);
+  var $loginForm = $('#loginForm');
   var $usernameInput = $('.usernameInput'); // Input for username
   var $messages = $('.messages'); // Messages area
-  var $inputMessage = $('.inputMessage'); // Input message input box
   var $messageForm = $('#messageForm');
-  var $loginForm = $('#loginForm');
+  var $messageInput = $('.messageInput'); // Input message input box
   var $createRoomForm = $('#createRoomForm'); // Input for username
 
   var $loginPage = $('.login.page'); // The login page
@@ -33,16 +28,6 @@ $(function() {
   // Prevents input from having injected markup
   var cleanInput = function (input) {
     return $('<div/>').text(input).html() || input;
-  };
-
-  var createRoom = function (room, fn) {
-    var request = $.ajax('/rooms', {
-      type: 'POST',
-      data: room,
-    });
-    request.done(function (data) {
-      if (fn) fn.call(data, data);
-    });
   };
 
   var addParticipantsMessage = function (data) {
@@ -71,7 +56,7 @@ $(function() {
       $typingMessages.remove();
     }
 
-    var colorStyle = 'style="color:' + getUsernameColor(data.username) + '"';
+    var colorStyle = 'style="color:' + getNameColor(data.username) + '"';
     var usernameDiv = '<span class="username"' + colorStyle + '>' +
       data.username + '</span>';
     var messageBodyDiv = '<span class="messageBody">' +
@@ -86,25 +71,25 @@ $(function() {
   };
 
   // Adds the visual chat typing message
-  function addChatTyping (data) {
+  var addChatTyping = function (data) {
     data.typing = true;
     data.message = 'is typing';
     addChatMessage(data);
-  }
+  };
 
   // Removes the visual chat typing message
-  function removeChatTyping (data) {
+  var removeChatTyping = function (data) {
     getTypingMessages(data).fadeOut(function () {
       $(this).remove();
     });
-  }
+  };
 
   // Adds a message element to the messages and scrolls to the bottom
   // el - The element to add as a message
   // options.fade - If the element should fade-in (default = true)
   // options.prepend - If the element should prepend
   //   all other messages (default = false)
-  function addMessageElement (el, options) {
+  var addMessageElement = function (el, options) {
     var $el = $(el);
 
     // Setup default options
@@ -128,26 +113,34 @@ $(function() {
       $messages.append($el);
     }
     $messages[0].scrollTop = $messages[0].scrollHeight;
-  }
+  };
 
   // Gets the 'X is typing' messages of a user
-  function getTypingMessages (data) {
+  var getTypingMessages = function (data) {
     return $('.typing.message').filter(function (i) {
       return $(this).data('username') === data.username;
     });
-  }
+  };
 
   // Gets the color of a username through our hash function
-  function getUsernameColor (username) {
-    // Compute hash code
-    var hash = 7;
-    for (var i = 0; i < username.length; i++) {
-       hash = username.charCodeAt(i) + (hash << 5) - hash;
-    }
-    // Calculate color
-    var index = Math.abs(hash % COLORS.length);
-    return COLORS[index];
-  }
+  var getNameColor = (function () {
+    var COLORS = [
+      '#e21400', '#91580f', '#f8a700', '#f78b00',
+      '#58dc00', '#287b00', '#a8f07a', '#4ae8c4',
+      '#3b88eb', '#3824aa', '#a700ff', '#d300e7'
+    ];
+
+    return function (name) {
+      // Compute hash code
+      var hash = 7;
+      for (var i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + (hash << 5) - hash;
+      }
+      // Calculate color
+      var index = Math.abs(hash % COLORS.length);
+      return COLORS[index];
+    };
+  })();
 
   // form events
 
@@ -178,7 +171,7 @@ $(function() {
       $loginPage.fadeOut();
       $roomsPage.show();
       $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
+      $currentInput = $messageInput.focus();
     },
     function (socket) {
       // Socket events
@@ -240,33 +233,25 @@ $(function() {
     e.preventDefault();
 
     var name = cleanInput($(this).find('input').val().trim());
-    createRoom({
+    user.createRoom({
       name: name,
       lang: 'en',
       capacity: 2,
+    }, function () {
+      roomsViewModel.refresh();
     });
   });
 
   // Keyboard events
 
-  /*$window.keydown(function (event) {
+  $window.keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
       $currentInput.focus();
     }
-    // When the client hits ENTER on their keyboard
-    if (event.which === 13) {
-      if (username) {
-        sendMessage();
-        socket.emit('stop_typing');
-        typing = false;
-      } else {
-        login();
-      }
-    }
-  });*/
+  });
 
-  $inputMessage.on('input', function() {
+  $messageInput.on('input', function() {
     user.updateTyping();
   });
 
@@ -278,8 +263,8 @@ $(function() {
   });
 
   // Focus input when clicking on the message input's border
-  $inputMessage.click(function () {
-    $inputMessage.focus();
+  $messageInput.click(function () {
+    $(this).focus();
   });
 
 });

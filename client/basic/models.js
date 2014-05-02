@@ -12,7 +12,7 @@
     this.socket = undefined;
 
 
-    this.TYPING_TIMER_LENGTH = 400; // ms
+    this.TYPING_TIMER_LENGTH = 1400; // ms
   };
 
   // fn is called synchronously
@@ -85,7 +85,14 @@
     }
   };
 
-  User.prototype.f =function () {
+  User.prototype.createRoom = function (room, fn) {
+    var request = $.ajax('/rooms', {
+      type: 'POST',
+      data: room,
+    });
+    request.done(function (data) {
+      if (fn) fn.call(data, data);
+    });
   };
 
   // room model

@@ -95,7 +95,7 @@ ul {
   font-size: 150%;
 }
 
-.inputMessage {
+.messageInput {
   font-size: 100%;
 }
 
@@ -134,7 +134,7 @@ ul {
 
 /* Input */
 
-.inputMessage {
+.messageInput {
   border: 10px solid #000;
   bottom: 0;
   height: 60px;
