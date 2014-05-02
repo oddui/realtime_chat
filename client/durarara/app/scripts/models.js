@@ -1,4 +1,7 @@
 (function() {
+  'use strict';
+
+  var host = 'http://127.0.0.1:3000';
 
   // user model
   var User = function (data) {
@@ -18,7 +21,7 @@
   // fn is called synchronously
   User.prototype.connect = function (fn) {
     // connect socket
-    this.socket = io({
+    this.socket = io.connect(host, {
       'query': 'token=' + this.token,
     });
     fn.call(this.socket, this.socket);
@@ -29,7 +32,7 @@
     if (this.name) {
       var self = this;
 
-      var request = $.ajax('/users/login', {
+      var request = $.ajax(host+'/users/login', {
         type: 'POST',
         data: {name: this.name},
       });
@@ -86,7 +89,7 @@
   };
 
   User.prototype.createRoom = function (room, fn) {
-    var request = $.ajax('/rooms', {
+    var request = $.ajax(host+'/rooms', {
       type: 'POST',
       data: room,
     });
@@ -105,7 +108,7 @@
   };
 
   var getRooms = function (fn) {
-    var request = $.ajax('/rooms', {
+    var request = $.ajax(host+'/rooms', {
       type: 'GET'
     });
     request.done(function (data) {

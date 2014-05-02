@@ -19,6 +19,7 @@ html {
 }
 
 html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
   background: #000;
@@ -51,20 +52,20 @@ ul {
   width: 100%;
 }
 
-/* Password Page */
+/* login page */
 
-.password.page {
+.login.page {
   background-color: #000;
 }
 
-.password.page img {
+.login.page img {
   display: block;
   margin: 100px auto 50px;
   width: 400px;
   height: 400px;
 }
 
-.password.page form#password {
+.login.page form#login {
   text-align: center;
   margin-right: auto;
   margin-left: auto;
@@ -76,14 +77,14 @@ ul {
   height: 200px;
 }
 
-.password.page form#password input[type=password] {
+.login.page form#login input[type=text] {
   width: 160px;
   border: 0px none;
   margin-top: 5px;
   margin-left: 100px;
 }
 
-.password.page form#password input[type=submit] {
+.login.page form#login input[type=submit] {
   width: 230px;
   height: 31px;
   border: 2px #fff solid;
@@ -95,7 +96,15 @@ ul {
   cursor: pointer;
 }
 
-.password.page form#password input[type=submit]:hover {
+.login.page form#login input[type=submit]:hover {
   background: #fff;
   color: #666;
+}
+
+.rooms.page {
+  display: none;
+}
+
+.chat.page {
+  display: none;
 }

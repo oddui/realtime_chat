@@ -2,9 +2,6 @@
   "name": "durarara",
   "private": true,
   "dependencies": {
-    "jquery": "~1.11.0",
-    "underscore": "~1.6.0",
-    "knockout-3.1.0": "http://knockoutjs.com/downloads/knockout-3.1.0.js"
   },
   "devDependencies": {}
 }

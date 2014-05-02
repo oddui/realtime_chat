@@ -23,16 +23,13 @@
 
         <div class='pages'>
 
-          <div class='password page'>
-            <img src='images/dollars_logo.jpg' alt=''>
-            <form id='password'>
-              <input maxlength="22" type="password">
+          <div class='login page'>
+            <img src='images/dollars_logo.jpg' alt='DOLLARS'>
+            <form id='login'>
+              <input maxlength="22" type="text">
               <br><br><br>
               <input type='submit' value='ENTER'>
             </form>
-          </div>
-
-          <div class='login page'>
           </div>
 
           <div class='rooms page'>
@@ -46,9 +43,6 @@
 
         <!-- build:js scripts/vendor.js -->
         <!-- bower:js -->
-        <script src="../bower_components/jquery/dist/jquery.js"></script>
-        <script src="../bower_components/underscore/underscore.js"></script>
-        <script src="../bower_components/knockout-3.1.0/index.js"></script>
         <!-- endbower -->
         <!-- endbuild -->
 
@@ -62,7 +56,13 @@
             ga('create','UA-XXXXX-X');ga('send','pageview');
         </script>
 
+        <script src="socket.io/socket.io.js"></script>
+
         <!-- build:js({app,.tmp}) scripts/main.js -->
+        <script src="scripts/underscore.js"></script>
+        <script src="scripts/knockout.js"></script>
+        <script src="scripts/jquery.js"></script>
+        <script src="scripts/models.js"></script>
         <script src="scripts/main.js"></script>
         <!-- endbuild -->
 </body>
