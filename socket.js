@@ -25,7 +25,6 @@ module.exports = function (server) {
     var options = {
     };
 
-    console.log(config.token.secret);
     jwt.verify(token, config.token.secret, options, function(err, decoded) {
 
       if (err) {
@@ -44,8 +43,11 @@ module.exports = function (server) {
 
     User.getById(socket.decoded_token._id, function (err, u) {
       if (err) return socket.emit('error', err);
-      user = u;
-      user.connect(socket);
+
+      if (u) {
+        user = u;
+        user.connect(socket);
+      }
     });
 
     socket.on('join', function (data) {
@@ -115,10 +117,12 @@ module.exports = function (server) {
     // when the user disconnects.. perform this
     socket.on('disconnect', function () {
       if (user) {
+        if (user.room) var to = user.room._id;
+
         user.disconnect(function () {
           user.broadcast('user_left', {
             username: user.name,
-          });
+          }, to);
         });
       }
     });

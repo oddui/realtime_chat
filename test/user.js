@@ -228,9 +228,6 @@ describe('User', function(){
         });
       });
 
-      it('should disconnect socket', function () {
-        assert.equal(firstUser.socket, undefined);
-      });
       it('should leave room', function (done) {
         User.getById(firstUser._id, function (err, user) {
           assert.equal(user.room_id, undefined);

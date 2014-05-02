@@ -169,7 +169,6 @@ User.prototype.disconnect = function (fn) {
   return this.leave(function (err) {
     if (err) return fn.call(this, err);
 
-    this.socket = undefined;
     if (!this.permanent) {
       this.destroy(fn.bind(this));
     } else {
