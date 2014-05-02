@@ -5,5 +5,7 @@ dist
 bower_components
 *.log
 db
+!client/basic
+client/*
 
 .DS_Store
