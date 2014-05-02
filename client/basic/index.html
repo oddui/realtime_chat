@@ -6,22 +6,39 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <ul class="pages">
-    <li class="chat page">
+  <div class="pages">
+    <div class="chat page">
       <div class="chatArea">
         <ul class="messages"></ul>
       </div>
-      <input class="inputMessage" placeholder="Type here..."/>
-    </li>
-    <li class="login page">
-      <div class="form">
+      <form id="messageForm">
+        <input class="inputMessage" placeholder="Type here..."/>
+      </form>
+    </div>
+    <div class="rooms page">
+      <form id="createRoomForm">
+        <h3 class="title">Create room</h3>
+        <input class="roomnameInput" type="text" maxlength="14" />
+        <button type="submit">Create</button>
+      </form>
+      <ul id="rooms" data-bind="foreach: {data: rooms, as: 'room'}">
+        <li>
+          <b data-bind="text: room.name"></b>
+          <button type="button" data-bind="click: room.enter">Enter</button>
+        </li>
+      </ul>
+    </div>
+    <div class="login page">
+      <form id="loginForm" class="form">
         <h3 class="title">What's your nickname?</h3>
         <input class="usernameInput" type="text" maxlength="14" />
-      </div>
-    </li>
-  </ul>
+      </form>
+    </div>
+  </div>
 
-  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
   <script src="socket.io/socket.io.js"></script>
   <script src="main.js"></script>
 </body>

@@ -1,83 +1,83 @@
 var debug = require('debug')('rtc:socket');
 var socketio = require('socket.io');
+var jwt = require('jsonwebtoken');
 var User = require('./user.js');
 var Room = require('./room.js');
 var io;
+
+User.setup(Room);
+Room.setup(User);
 
 module.exports = function (server) {
 
   io = socketio(server);
 
-  // Chatroom
+  // authenticate
+  io.use(function (socket, next) {
+    var token = socket.request.query.token;
 
-  io.on('connection', function (socket) {
+    if (!token) {
+      error = new Error('credentials_required');
+      return next(error);
+    }
+
+    var options = {
+      secret: 'secret',
+    };
+
+    jwt.verify(token, options.secret, options, function(err, decoded) {
+
+      if (err) {
+        error = new Error('invalid_token');
+        return next(error);
+      }
+
+      socket.decoded_token = decoded;
+      next();
+    });
+  });
+
+  io.on('connect', function (socket) {
 
     var user;
 
-    // when the client emits 'add user', this listens and executes
-    socket.on('new_user', function (username) {
-      try {
-        user = new User(socket, username);
-        user.socket.emit('new_user_response', {
-          success: true,
-          name: username
-        });
-      } catch (e) {
-        socket.emit('new_user_response', {
-          success: false,
-          message: e.message
-        });
-      }
+    User.getById(socket.decoded_token._id, function (err, u) {
+      if (err) return socket.emit('error', err);
+      user = u;
+      user.connect(socket);
     });
 
-    socket.on('new_room', function (roomname) {
-      if (!!user) {
-        try {
-          new Room(roomname);
-          user.socket.emit('new_room_response', {
-            success: true,
-          });
-        } catch (e) {
-          user.socket.emit('new_room_response', {
-            success: false,
-            message: e.message
-          });
-        }
-      }
-    });
+    socket.on('join', function (data) {
+      if (user) {
+        var room = Room.getById(data._id, function (err, room) {
+          // if db err or room not exist
+          if (err || !room) {
+            user.echo('join_response', {
+              success: false,
+              message: 'room does not exist'
+            });
+          }
 
-    socket.on('join', function (roomname) {
-      if (!!user) {
-        var room = Room.getByName(roomname);
-
-        if (!!room) {
+          // join room
           user.join(room, function () {
             user.echo('join_response', {
               success: true,
-              numberOfUsers: user.room.users.length
             });
             user.broadcast('user_joined', {
               username: user.name,
-              numberOfUsers: user.room.users.length
             });
           });
-        } else {
-          user.echo('join_response', {
-            success: false,
-            message: 'room does not exist'
-          });
-        }
+        });
       }
     });
 
     socket.on('leave', function () {
-      if (!!user) {
+      if (user) {
         var room = user.room;
 
         user.leave(function () {
           user.broadcast('user_left', {
             username: user.name,
-            numberOfUsers: room.users.length
           }, room.name);
         });
       }
@@ -85,7 +85,7 @@ module.exports = function (server) {
 
     // when the client emits 'new message', we broadcast it to others
     socket.on('new_message', function (data) {
-      if (!!user) {
+      if (user) {
         user.broadcast('new_message', {
           username: user.name,
           message: data
@@ -95,7 +95,7 @@ module.exports = function (server) {
 
     // when the client emits 'typing', we broadcast it to others
     socket.on('typing', function () {
-      if (!!user) {
+      if (user) {
         user.broadcast('typing', {
           username: user.name
         });
@@ -104,7 +104,7 @@ module.exports = function (server) {
 
     // when the client emits 'stop typing', we broadcast it to others
     socket.on('stop_typing', function () {
-      if (!!user) {
+      if (user) {
         user.broadcast('stop_typing', {
           username: user.name
         });
@@ -113,18 +113,12 @@ module.exports = function (server) {
 
     // when the user disconnects.. perform this
     socket.on('disconnect', function () {
-      if (!!user) {
-        var room = user.room;
-        if (!!room) {
-          user.leave(function () {
-            user.broadcast('user_left', {
-              username: user.name,
-              numberOfUsers: room.users.length
-            }, room.name);
-
-            user.disconnect();
+      if (user) {
+        user.disconnect(function () {
+          user.broadcast('user_left', {
+            username: user.name,
           });
-        }
+        });
       }
     });
   });

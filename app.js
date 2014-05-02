@@ -21,12 +21,12 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
-app.use(jwt({ secret: 'secret', skip: ['users/login']}));
 app.use(express.static(path.join(__dirname, config.client.path)));
 debug('Static path set to ' + config.client.path);
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/rooms', jwt({ secret: 'secret'}));
 app.use('/rooms', rooms);
 
 /// catch 404 and forwarding to error handler

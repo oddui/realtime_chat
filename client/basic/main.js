@@ -12,8 +12,12 @@ $(function() {
   var $usernameInput = $('.usernameInput'); // Input for username
   var $messages = $('.messages'); // Messages area
   var $inputMessage = $('.inputMessage'); // Input message input box
+  var $messageForm = $('#messageForm');
+  var $loginForm = $('#loginForm');
+  var $createRoomForm = $('#createRoomForm'); // Input for username
 
   var $loginPage = $('.login.page'); // The login page
+  var $roomsPage = $('.rooms.page'); // The rooms page
   var $chatPage = $('.chat.page'); // The chatroom page
 
   // Prompt for setting a username
@@ -23,9 +27,188 @@ $(function() {
   var lastTypingTime;
   var $currentInput = $usernameInput.focus();
 
-  var socket = io();
+  // jwt
+  var token;
 
-  function addParticipantsMessage (data) {
+  // socket.io client
+  var socket;
+
+  // TODO: user model
+  var User = function (data) {
+  };
+
+  var Room = function (data) {
+    var room = this;
+
+    _(data).each(function (value, key) {
+      room[key] = value;
+    });
+  };
+
+  Room.prototype.enter = function () {
+    console.log('entering...');
+    socket.emit('join', this);
+  };
+
+  var roomsViewModel = (function () {
+    var rooms = ko.observableArray();
+
+    var add = function (room) {
+      if (!(room instanceof Room)) room = new Room(room);
+      rooms.push(room);
+    };
+
+    var remove = function (room) {
+      rooms.remove(room);
+    };
+
+    var refresh = function () {
+      getRooms(function (data) {
+        rooms.removeAll();
+        rooms(_(data).map(function (roomData) {
+          return new Room(roomData);
+        }));
+      });
+    };
+
+    return {
+      rooms: rooms,
+      add: add,
+      remove: remove,
+      refresh: refresh,
+    };
+  })();
+
+  ko.applyBindings(roomsViewModel, $('ul#rooms')[0]);
+
+  // Prevents input from having injected markup
+  var cleanInput = function (input) {
+    return $('<div/>').text(input).html() || input;
+  };
+
+  // log the user in
+  var login = function (name) {
+    // If the name is valid
+    if (name) {
+      var request = $.ajax('/users/login', {
+        type: 'POST',
+        data: {name: name},
+      });
+      request.done(function (data) {
+        // store token
+        token = data.token;
+        $.ajaxSetup({
+          headers: {
+            'Authorization': 'Bearer ' + token,
+          },
+        });
+
+        // connect socket
+        socket = io({
+          'query': 'token=' + token,
+        });
+
+        // Socket events
+
+        socket.on('join_response', function (data) {
+          if (data.success) {
+            username = name;
+            connected = true;
+
+            // ui
+            $roomsPage.fadeOut();
+            $chatPage.show();
+
+            // Display the welcome message
+            var message = "Welcome to Realtime Chat &mdash; ";
+            log(message, {
+              prepend: true
+            });
+            addParticipantsMessage(data);
+          } else {
+            console.log(data);
+          }
+        });
+
+        // Whenever the server emits 'user joined', log it in the chat body
+        socket.on('user_joined', function (data) {
+          log(data.username + ' joined');
+          addParticipantsMessage(data);
+        });
+
+        // Whenever the server emits 'user left', log it in the chat body
+        socket.on('user_left', function (data) {
+          log(data.username + ' left');
+          addParticipantsMessage(data);
+          removeChatTyping(data);
+        });
+
+        // Whenever the server emits 'typing', show the typing message
+        socket.on('typing', function (data) {
+          addChatTyping(data);
+        });
+
+        // Whenever the server emits 'stop typing', kill the typing message
+        socket.on('stop_typing', function (data) {
+          removeChatTyping(data);
+        });
+
+        // Whenever the server emits 'new message', update the chat body
+        socket.on('new_message', function (data) {
+          addChatMessage(data);
+        });
+
+        socket.on('error', function (data) {
+          console.log(data);
+        });
+
+        // ui
+        $loginPage.fadeOut();
+        $roomsPage.show();
+        $loginPage.off('click');
+        $currentInput = $inputMessage.focus();
+
+        roomsViewModel.refresh();
+      });
+    }
+  };
+
+  var createRoom = function (room, fn) {
+    var request = $.ajax('/rooms', {
+      type: 'POST',
+      data: room,
+    });
+    request.done(function (data) {
+      if (fn) fn.call(data, data);
+    });
+  };
+
+  var getRooms = function (fn) {
+    var request = $.ajax('/rooms', {
+      type: 'GET'
+    });
+    request.done(function (data) {
+      if (fn) fn.call(data, data);
+    });
+  };
+
+  // Sends a chat message
+  var sendMessage = function (message) {
+    // if there is a non-empty message and a socket connection
+    if (message && connected) {
+      addChatMessage({
+        username: username,
+        message: message
+      });
+      // tell server to execute 'new message' and send along one parameter
+      socket.emit('new_message', message);
+
+      socket.emit('stop_typing');
+      typing = false;
+    }
+  };
+
+  var addParticipantsMessage = function (data) {
     var message = '';
     if (data.numberOfUsers === 1) {
       message += "there's 1 participant";
@@ -33,35 +216,7 @@ $(function() {
       message += "there're " + data.numberOfUsers + " participants";
     }
     log(message);
-  }
-
-  // Sets the client's username
-  function setUsername () {
-    var name = cleanInput($usernameInput.val().trim());
-    // If the name is valid
-    if (name) {
-      // Tell the server your username
-      socket.emit('new_user', name);
-    }
-  }
-
-  // Sends a chat message
-  function sendMessage () {
-    var message = $inputMessage.val();
-    // Prevent markup from being injected into the message
-    message = cleanInput(message);
-    // if there is a non-empty message and a socket connection
-    if (message && connected) {
-      console.log('sending...');
-      $inputMessage.val('');
-      addChatMessage({
-        username: username,
-        message: message
-      });
-      // tell server to execute 'new message' and send along one parameter
-      socket.emit('new_message', message);
-    }
-  }
+  };
 
   // Log a message
   function log (message, options) {
@@ -138,11 +293,6 @@ $(function() {
     $messages[0].scrollTop = $messages[0].scrollHeight;
   }
 
-  // Prevents input from having injected markup
-  function cleanInput (input) {
-    return $('<div/>').text(input).html() || input;
-  }
-
   // Updates the typing event
   function updateTyping () {
     if (connected) {
@@ -182,9 +332,39 @@ $(function() {
     return COLORS[index];
   }
 
+  // form events
+
+  $messageForm.submit(function (e) {
+    e.preventDefault();
+
+    var $input = $(this).find('input');
+    var message = cleanInput($input.val().trim());
+    $input.val('');
+
+    sendMessage(message);
+  });
+
+  $loginForm.submit(function (e) {
+    e.preventDefault();
+
+    var name = cleanInput($(this).find('input').val().trim());
+    login(name);
+  });
+
+  $createRoomForm.submit(function (e) {
+    e.preventDefault();
+
+    var name = cleanInput($(this).find('input').val().trim());
+    createRoom({
+      name: name,
+      lang: 'en',
+      capacity: 2,
+    });
+  });
+
   // Keyboard events
 
-  $window.keydown(function (event) {
+  /*$window.keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
       $currentInput.focus();
@@ -196,10 +376,10 @@ $(function() {
         socket.emit('stop_typing');
         typing = false;
       } else {
-        setUsername();
+        login();
       }
     }
-  });
+  });*/
 
   $inputMessage.on('input', function() {
     updateTyping();
@@ -217,70 +397,4 @@ $(function() {
     $inputMessage.focus();
   });
 
-  // Socket events
-
-  socket.on('new_user_response', function (data) {
-    if (data.success) {
-      username = data.name;
-
-      $loginPage.fadeOut();
-      $chatPage.show();
-      $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
-
-      // join basic room
-      socket.emit('join', 'Basic');
-
-    } else {
-      alert(data.message);
-    }
-  });
-
-  socket.on('join_response', function (data) {
-    if (data.success) {
-      connected = true;
-      // Display the welcome message
-      var message = "Welcome to Realtime Chat &mdash; ";
-      log(message, {
-        prepend: true
-      });
-      addParticipantsMessage(data);
-    } else {
-      // create basic room
-      socket.emit('new_room', 'Basic');
-      socket.once('new_room_response', function (data) {
-        if (data.success) {
-          socket.emit('join', 'Basic');
-        }
-      });
-    }
-  });
-
-  // Whenever the server emits 'new message', update the chat body
-  socket.on('new_message', function (data) {
-    addChatMessage(data);
-  });
-
-  // Whenever the server emits 'user joined', log it in the chat body
-  socket.on('user_joined', function (data) {
-    log(data.username + ' joined');
-    addParticipantsMessage(data);
-  });
-
-  // Whenever the server emits 'user left', log it in the chat body
-  socket.on('user_left', function (data) {
-    log(data.username + ' left');
-    addParticipantsMessage(data);
-    removeChatTyping(data);
-  });
-
-  // Whenever the server emits 'typing', show the typing message
-  socket.on('typing', function (data) {
-    addChatTyping(data);
-  });
-
-  // Whenever the server emits 'stop typing', kill the typing message
-  socket.on('stop_typing', function (data) {
-    removeChatTyping(data);
-  });
 });
