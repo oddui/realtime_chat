@@ -46,7 +46,6 @@ $(function() {
   };
 
   Room.prototype.enter = function () {
-    console.log('entering...');
     socket.emit('join', this);
   };
 

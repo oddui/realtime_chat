@@ -26,7 +26,7 @@ debug('Static path set to ' + config.client.path);
 
 app.use('/', routes);
 app.use('/users', users);
-app.use('/rooms', jwt({ secret: 'secret'}));
+app.use('/rooms', jwt({ secret: config.token.secret}));
 app.use('/rooms', rooms);
 
 /// catch 404 and forwarding to error handler

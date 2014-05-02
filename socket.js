@@ -1,6 +1,7 @@
 var debug = require('debug')('rtc:socket');
 var socketio = require('socket.io');
 var jwt = require('jsonwebtoken');
+var config = require('./config');
 var User = require('./user.js');
 var Room = require('./room.js');
 var io;
@@ -22,10 +23,10 @@ module.exports = function (server) {
     }
 
     var options = {
-      secret: 'secret',
     };
 
-    jwt.verify(token, options.secret, options, function(err, decoded) {
+    console.log(config.token.secret);
+    jwt.verify(token, config.token.secret, options, function(err, decoded) {
 
       if (err) {
         error = new Error('invalid_token');
