@@ -24,7 +24,7 @@
       <ul id="rooms" data-bind="foreach: {data: rooms, as: 'room'}">
         <li>
           <b data-bind="text: room.name"></b>
-          <button type="button" data-bind="click: room.enter">Enter</button>
+          <button type="button" data-bind="click: user.join.bind(user)">Enter</button>
         </li>
       </ul>
     </div>
@@ -40,6 +40,7 @@
   <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
   <script src="socket.io/socket.io.js"></script>
+  <script src="models.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
