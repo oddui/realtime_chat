@@ -70,18 +70,30 @@ ul {
   margin-right: auto;
   margin-left: auto;
   display: block;
-  background-image: url('../images/textfield.png');
-  background-repeat: no-repeat;
-  background-position: 50% 0%;
   width: 400px;
   height: 200px;
 }
 
+.login.page form#login div * {
+  display: inline-block;
+  margin-bottom: 30px;
+}
+
+.login.page form#login label {
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-right: 5px;
+}
+
 .login.page form#login input[type=text] {
-  width: 160px;
+  width: 180px;
+  height: 28px;
   border: 0px none;
-  margin-top: 5px;
-  margin-left: 100px;
+  border-radius: 25px;
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .login.page form#login input[type=submit] {
