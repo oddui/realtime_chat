@@ -15,7 +15,7 @@
     "jsonwebtoken": "^0.3.0",
     "morgan": "~1.0.0",
     "nedb": "^0.10.5",
-    "socket.io": "https://github.com/LearnBoost/socket.io/archive/1.0.0-pre.tar.gz",
+    "socket.io": "https://github.com/LearnBoost/socket.io/archive/1.0.0-pre2.tar.gz",
     "static-favicon": "~1.0.0"
   },
   "devDependencies": {

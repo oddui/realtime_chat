@@ -15,7 +15,7 @@ module.exports = function (server) {
 
   // authenticate
   io.use(function (socket, next) {
-    var token = socket.request.query.token;
+    var token = socket.request._query.token;
 
     if (!token) {
       error = new Error('credentials_required');
