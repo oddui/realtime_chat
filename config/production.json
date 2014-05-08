@@ -10,7 +10,7 @@
     "rooms" : "db/rooms.db"
   },
   "client" : {
-    "name" : "basic",
-    "path" : ""
+    "name" : "durarara",
+    "path" : "dist"
   }
 }

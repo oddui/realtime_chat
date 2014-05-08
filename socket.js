@@ -76,12 +76,15 @@ module.exports = function (server) {
 
     socket.on('leave', function () {
       if (user) {
-        var room = user.room;
+        var to = user.room._id;
 
         user.leave(function () {
+          user.echo('leave_response', {
+            success: true,
+          });
           user.broadcast('user_left', {
             username: user.name,
-          }, room.name);
+          }, to);
         });
       }
     });

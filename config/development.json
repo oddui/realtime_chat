@@ -10,7 +10,7 @@
     "rooms" : "db/rooms.development.db"
   },
   "client" : {
-    "name" : "durarara",
-    "path" : "app"
+    "name" : "basic",
+    "path" : ""
   }
 }
