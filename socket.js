@@ -55,7 +55,7 @@ module.exports = function (server) {
         var room = Room.getById(data._id, function (err, room) {
           // if db err or room not exist
           if (err || !room) {
-            user.echo('join_response', {
+            return user.echo('join_response', {
               success: false,
               message: 'room does not exist'
             });
