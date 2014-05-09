@@ -1,6 +1,9 @@
 node_modules
 dist
 .tmp
+db
+!client/basic
+client/*
 .sass-cache
 bower_components
 *.log
