@@ -5,32 +5,19 @@ var Room = require('../room');
 
 /* GET rooms listing. */
 router.get('/', function(req, res) {
-  var rooms = [];
-
-  Room.getAll().forEach(function (room) {
-    rooms.push({
-      name: room.name,
-      lang: room.lang,
-      capacity: room.capacity,
-      users: room.users.map(function (user) {
-        return user.name;
-      })
-    });
+  Room.getAll(function (err, rooms) {
+    if (err) res.send(500, err);
+    res.send(200, rooms);
   });
-
-  res.json(rooms);
 });
 
 /* Create a new room */
 router.post('/', function(req, res) {
-  try {
-    new Room(req.body.name);
+  var room = new Room(req.body);
+  room.save(function (err, room) {
+    if (err) res.send(500, err);
     res.send(200);
-  } catch (e) {
-    res.json(409, {
-      message: e.message
-    });
-  }
+  });
 });
 
 module.exports = router;

@@ -5,6 +5,7 @@ var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var jwt = require('express-jwt');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -15,16 +16,32 @@ var app = express();
 
 app.set('port', config.port);
 
+// CORS middleware
+var cors = function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // intercept OPTIONS method
+  if ('OPTIONS' == req.method) {
+    res.send(200);
+  }
+  else {
+    next();
+  }
+};
+app.use(cors);
+
 app.use(favicon());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
-debug('Static path set to ' + config.client.path);
 app.use(express.static(path.join(__dirname, config.client.path)));
+debug('Static path set to ' + config.client.path);
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/rooms', jwt({ secret: config.token.secret}));
 app.use('/rooms', rooms);
 
 /// catch 404 and forwarding to error handler

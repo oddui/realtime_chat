@@ -6,12 +6,16 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "async": "^0.7.0",
     "body-parser": "~1.0.0",
     "cookie-parser": "~1.0.1",
     "debug": "~0.7.4",
     "express": "~4.0.0",
+    "express-jwt": "^0.1.3",
+    "jsonwebtoken": "^0.3.0",
     "morgan": "~1.0.0",
-    "socket.io": "https://github.com/LearnBoost/socket.io/archive/1.0.0-pre.tar.gz",
+    "nedb": "^0.10.5",
+    "socket.io": "https://github.com/LearnBoost/socket.io/archive/1.0.0-pre2.tar.gz",
     "static-favicon": "~1.0.0"
   },
   "devDependencies": {

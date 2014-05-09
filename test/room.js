@@ -1,73 +1,183 @@
 var assert = require('assert');
-var Room = require('../room.js');
 var User = require('../user.js');
+var Room = require('../room.js');
+User.setup(Room);
+Room.setup(User);
 
 describe('Room', function(){
   var firstRoom;
   var firstUser;
 
-  beforeEach(function () {
-    firstUser = new User(undefined, 'Mr. 1');
-    firstRoom = new Room('Seddon', 'en', 2);
-    firstRoom.addUser(firstUser);
+  beforeEach(function (done) {
+    firstUser = new User({name: 'Mr. 1'}, undefined);
+    firstRoom = new Room({
+      name: 'Seddon',
+      lang: 'en',
+      capacity: 2,
+    });
+    firstRoom.save(function () {
+      firstUser.save(function () {
+        done();
+      });
+    });
   });
 
-  afterEach(function () {
-    Room.getAll().length = 0;
-    User.getAll().length = 0;
+  afterEach(function (done) {
+    Room.deleteAll(function () {
+      done();
+    });
   });
 
-  describe('::getAll()', function(){
-    it('should return rooms array', function(){
-      assert.equal(1, Room.getAll().length);
-      assert.deepEqual([firstRoom], Room.getAll());
+  describe('::getById()', function(){
+    it('should get the room', function (done) {
+      Room.getById(firstRoom._id, function (err, room) {
+        assert(room instanceof Room);
+        assert.equal(room._id, firstRoom._id);
+        done();
+      });
+    });
+  });
+
+  describe('::getAll()', function () {
+    it('should get rooms array', function (done) {
+      Room.getAll(function (err, rooms) {
+        assert.equal(rooms.length, 1);
+        assert.equal(rooms[0].name, firstRoom.name);
+        rooms.forEach(function (room) {
+          assert(room instanceof Room);
+          done();
+        });
+      });
     });
   });
 
   describe('::getByName()', function(){
-    it('should return the room of the name', function(){
-      assert.equal(firstRoom, Room.getByName(firstRoom.name));
+    it('should get an array of rooms of the name', function (done) {
+      Room.getByName(firstRoom.name, function (err, rooms) {
+        rooms.forEach(function (room) {
+          assert(room instanceof Room);
+          assert.equal(room.name, firstRoom.name);
+        });
+        done();
+      });
     });
   });
 
-  describe('#getUsers()', function(){
-    it('should return an array of users', function(){
-      assert.equal(1, firstRoom.getUsers().length);
-      assert.deepEqual([firstUser], firstRoom.getUsers());
+  describe('::deleteById()', function(){
+    it('should delete the room from data store', function (done) {
+      Room.deleteById(firstRoom._id, function (err, numRemoved) {
+        assert.equal(numRemoved, 1);
+        done();
+      });
     });
   });
 
-  describe('#addUser()', function(){
-    it('should be able to add a user', function(){
-      assert.equal(2, firstRoom.addUser(new User('','abc')).getUsers().length);
-    });
-    it('should not add a user when the room is full', function(){
-      firstRoom.addUser(new User(undefined,'abc'));
-      firstRoom.addUser(new User(undefined,'bcd'));
-      assert.equal(2, firstRoom.getUsers().length);
-    });
-  });
-
-  describe('#removeUser()', function(){
-    it('should be able to remove a user', function(){
-      firstRoom.addUser(new User(undefined,'abc'));
-      assert.equal(1, firstRoom.removeUser(firstUser).getUsers().length);
-      assert.equal(1, Room.getAll().length);
-    });
-    it('should close the room after removing the last user', function(){
-      assert.equal(0, firstRoom.removeUser(firstUser).getUsers().length);
-      assert.equal(0, Room.getAll().length);
+  describe('::deleteAll()', function () {
+    it('should delete all rooms from data store', function (done) {
+      // save a new room
+      (new Room({name: 'Kingsville'})).save(function () {
+        Room.getAll(function (err, rooms) {
+          // number of rooms in the data store
+          var num = rooms.length;
+          Room.deleteAll(function (err, numRemoved) {
+            assert.equal(numRemoved, num);
+            done();
+          });
+        });
+      });
     });
   });
 
-  describe('#close()', function(){
-    it('should be able to close an empty room', function(){
-      firstRoom.removeUser(firstUser).close();
-      assert.equal(-1, Room.getAll().indexOf(firstRoom));
+  describe('#save()', function(){
+    describe('save a new room in the data store', function () {
+      var room, doc;
+
+      beforeEach(function (done) {
+        room = firstRoom = new Room({
+          name: 'Kingsville',
+          lang: 'en',
+          capacity: 2,
+        });
+        room.save(function (err, newDoc) {
+          doc = newDoc;
+          done();
+        });
+      });
+
+      it('doc._id should to assigned to room._id', function () {
+        assert(room._id, doc._id);
+      });
+      it('room should be saved in the data store', function (done) {
+        Room.getById(room._id, function (err, r) {
+          assert.equal(r.name, room.name);
+          done();
+        });
+      });
     });
-    it('should not be able to close a non-empty room', function(){
-      firstRoom.close();
-      assert.notEqual(-1, Room.getAll().indexOf(firstRoom));
+
+    it('should be able to update a room in the data store', function (done) {
+      firstRoom.name = 'Kingsville';
+      firstRoom.save(function (err, numUpdated) {
+        assert.equal(numUpdated, 1);
+        Room.getById(firstRoom._id, function (err, room) {
+          assert.equal(room.name, firstRoom.name);
+          done();
+        });
+      });
+    });
+  });
+
+  describe('#destroy()', function () {
+    it('should be able to delete itself', function (done) {
+      firstRoom.destroy(function (err, numRemoved) {
+        assert.equal(numRemoved, 1);
+        done();
+      });
+    });
+  });
+
+  describe('#getUsers()', function () {
+    beforeEach(function (done) {
+      firstUser.room_id = firstRoom._id;
+      firstUser.save(function () {
+        done();
+      });
+    });
+
+    it('should be able to get users in this room', function (done) {
+      firstRoom.getUsers(function (err, users) {
+        assert.equal(users.length, 1);
+        var userNames = users.map(function (user) {
+          return user.name;
+        });
+        assert(-1 !== userNames.indexOf(firstUser.name));
+        done();
+      });
+    });
+  });
+
+  describe('#close()', function () {
+    it('should be able to close an empty non-permanent room', function (done) {
+      firstRoom.close(function (err, numRemoved) {
+        assert.equal(numRemoved, 1);
+        done();
+      });
+    });
+    it('should not close a non-empty room', function (done) {
+      firstUser.room_id = firstRoom._id;
+      firstUser.save(function () {
+        firstRoom.close(function (err, numRemoved) {
+          assert.notEqual(numRemoved, 1);
+          done();
+        });
+      });
+    });
+    it('should not close a permanent room', function (done) {
+      firstRoom.permanent = true;
+      firstRoom.close(function (err, numRemoved) {
+        assert.notEqual(numRemoved, 0);
+        done();
+      });
     });
   });
 });

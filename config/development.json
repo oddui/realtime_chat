@@ -2,6 +2,13 @@
   "app" : {
     "port" : 3000
   },
+  "token" : {
+    "secret" : "shhhhh"
+  },
+  "db" : {
+    "users" : "db/users.development.db",
+    "rooms" : "db/rooms.development.db"
+  },
   "client" : {
     "name" : "basic",
     "path" : ""
