@@ -91,6 +91,13 @@ User.deleteAll = function(fn) {
   });
 };
 
+User.count = function(fn) {
+  users.count({}, function (err, count) {
+    if (err) return fn(err);
+    fn(err, count);
+  });
+};
+
 // fn is called with err and doc/numUpdated(depending on whether it's an insert or update)
 User.prototype.save = function (fn) {
   var self = this;

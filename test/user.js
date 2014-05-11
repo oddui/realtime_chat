@@ -129,6 +129,15 @@ describe('User', function(){
     });
   });
 
+  describe('::count()', function(){
+    it('should get number of users in datastore', function (done) {
+      User.count(function (err, count) {
+        assert.equal(count, 1);
+        done();
+      });
+    });
+  });
+
   describe('#save()', function () {
     describe('save a new user in the data store', function () {
       var user, doc;

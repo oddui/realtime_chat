@@ -9,6 +9,13 @@ router.get('/', function(req, res) {
   res.send('respond with a resource');
 });
 
+router.get('/count', function(req, res) {
+  User.count(function (err, count) {
+    if (err) res.send(500, err);
+    res.send({count: count});
+  });
+});
+
 router.post('/login', function (req, res) {
   var user = new User({name: req.body.name});
   user.save(function (err, user) {
