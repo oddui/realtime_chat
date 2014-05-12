@@ -19,6 +19,7 @@ module.exports = function (server) {
 
     if (!token) {
       error = new Error('credentials_required');
+      debug('authentication failed: %s', error.message);
       return next(error);
     }
 
@@ -26,29 +27,33 @@ module.exports = function (server) {
     };
 
     jwt.verify(token, config.token.secret, options, function(err, decoded) {
-
       if (err) {
         error = new Error('invalid_token');
+        debug('authentication failed: %s', error.message);
         return next(error);
       }
 
-      socket.decoded_token = decoded;
-      next();
+      User.getById(decoded._id, function (err, user) {
+        if (err) {
+          debug('authentication failed: %s', err.message);
+          return next(err);
+        }
+        if (!user) {
+          error = new Error('user does not exist');
+          debug('authentication failed: %s', error.message);
+          return next(error);
+        }
+
+        socket.user = user;
+        next();
+      });
     });
   });
 
   io.on('connect', function (socket) {
 
-    var user;
-
-    User.getById(socket.decoded_token._id, function (err, u) {
-      if (err) return socket.emit('error', err);
-
-      if (u) {
-        user = u;
-        user.connect(socket);
-      }
-    });
+    var user = socket.user;
+    user.connect(socket);
 
     socket.on('join', function (data) {
       if (user) {
