@@ -6,7 +6,10 @@ var User = require('../user');
 
 /* GET users listing. */
 router.get('/', function(req, res) {
-  res.send('respond with a resource');
+  User.getAll(function (err, users) {
+    if (err) res.send(500, err);
+    res.send(users);
+  });
 });
 
 router.get('/count', function(req, res) {
