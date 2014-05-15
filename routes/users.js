@@ -1,3 +1,4 @@
+var debug = require('debug')('rtc:user');
 var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
@@ -67,10 +68,10 @@ router.post('/session', function (req, res) {
             token: token,
           });
         });
+      } else {
+        // all good
+        res.send(200, {user: user});
       }
-
-      // all good
-      res.send(200, {user: user});
     });
   });
 });
