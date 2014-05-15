@@ -29,7 +29,7 @@ module.exports = function (server) {
     jwt.verify(token, config.token.secret, options, function(err, decoded) {
       if (err) {
         error = new Error('invalid_token');
-        debug('authentication failed: %s', error.message);
+        debug('authentication failed: %s', err.message);
         return next(error);
       }
 
