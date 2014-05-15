@@ -8,7 +8,7 @@ var Room = require('../room.js');
 User.setup(Room);
 Room.setup(User);
 
-describe('User', function(){
+describe('User', function() {
   var httpServer, server, client, socket;
   var firstUser, firstRoom;
 
@@ -41,13 +41,13 @@ describe('User', function(){
   });
 
   beforeEach(function (done) {
-    firstUser = new User({name: 'Mr. 1'}, socket);
+    firstUser = new User({name: 'Mr. 1'});
     firstRoom = new Room({
       name: 'Seddon',
       lang: 'en',
       capacity: 2,
     });
-    firstUser.save(function () {
+    firstUser.connect(socket, function () {
       firstRoom.save(function () {
         done();
       });
@@ -220,45 +220,49 @@ describe('User', function(){
   });
 
   describe('#connect()', function () {
+    var fakeSocket, user;
+
+    beforeEach(function (done) {
+      fakeSocket = 'socket';
+      firstUser.connect(fakeSocket, function () {
+        User.getById(firstUser._id, function (err, u) {
+          user = u;
+          done();
+        });
+      });
+    });
+
     it('should assign socket', function () {
-      assert.equal(socket, firstUser.connect(socket).socket);
+      assert.equal(firstUser.socket, fakeSocket);
+    });
+    it('should assign socket', function () {
+      assert(user.connected);
     });
   });
 
   describe('#disconnect()', function () {
-    describe('permament user', function () {
-      beforeEach(function (done) {
-        firstUser.permanent = true;
-        firstUser.room_id = firstRoom._id;
-        firstUser.save(function () {
-          firstUser.disconnect(function () {
-            done();
-          });
-        });
-      });
-
-      it('should leave room', function (done) {
-        User.getById(firstUser._id, function (err, user) {
-          assert.equal(user.room_id, undefined);
+    beforeEach(function (done) {
+      firstUser.room_id = firstRoom._id;
+      firstUser.save(function () {
+        firstUser.disconnect(function () {
           done();
         });
       });
     });
 
-    describe('non-permament user', function () {
-      beforeEach(function (done) {
-        firstUser.room_id = firstRoom._id;
-        firstUser.save(function () {
-          firstUser.disconnect(function () {
-            done();
-          });
-        });
+    it('should leave room', function (done) {
+      assert.equal(firstUser.room_id, undefined);
+      User.getById(firstUser._id, function (err, user) {
+        assert.equal(user.room_id, undefined);
+        done();
       });
-      it('should destroy itself if not permanent', function (done) {
-        User.getById(firstUser._id, function (err, user) {
-          assert(!user);
-          done();
-        });
+    });
+
+    it('should not be connected', function (done) {
+      assert.equal(firstUser.connected, false);
+      User.getById(firstUser._id, function (err, user) {
+        assert(!user.connected);
+        done();
       });
     });
   });

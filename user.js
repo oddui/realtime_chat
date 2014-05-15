@@ -12,12 +12,12 @@ var users = new Datastore({
 });
 
 // user object
-var User = function (doc, socket) {
+var User = function (doc) {
   this._id = doc._id;
   this.name = doc.name;
   this.room_id = doc.room_id;
-  this.permanent = doc.permanent || false;
-  this.connect(socket);
+  this.connected = doc.connected;
+  this.lastSeenAt = doc.lastSeenAt;
 };
 
 User.setup = function (dep) {
@@ -107,6 +107,8 @@ User.prototype.save = function (fn) {
     users.insert({
       name: self.name,
       room_id: self.room_id,
+      connected: self.connected,
+      lastSeenAt: new Date(),
     }, function (err, doc) {
       if (err) return fn(err);
       debug('user %s saved', doc.name);
@@ -120,6 +122,8 @@ User.prototype.save = function (fn) {
     users.update({_id: self._id}, {
       name: self.name,
       room_id: self.room_id,
+      connected: self.connected,
+      lastSeenAt: new Date(),
     }, {}, function (err, numUpdated) {
       if (err) return fn(err);
       debug('user %s updated', self.name);
@@ -167,8 +171,19 @@ User.prototype.getRoom = function (fn) {
   return this;
 };
 
-User.prototype.connect = function (socket) {
+User.prototype.connect = function (socket, fn) {
+  var self = this;
   this.socket = socket;
+  this.connected = true;
+  this.save(function (err) {
+    if (err) {
+      if (fn) fn.call(self, err);
+      return;
+    }
+
+    debug('%s connected', self.name);
+    if (fn) fn.call(self);
+  });
   return this;
 };
 
@@ -176,11 +191,13 @@ User.prototype.disconnect = function (fn) {
   return this.leave(function (err) {
     if (err) return fn.call(this, err);
 
-    if (!this.permanent) {
-      this.destroy(fn.bind(this));
-    } else {
+    this.connected = false;
+    this.save(function () {
+      if (err) return fn.call(this, err);
+
+      debug('%s disconnected', this.name);
       if (fn) fn.call(this);
-    }
+    });
   });
 };
 
