@@ -130,7 +130,19 @@ describe('User', function() {
   });
 
   describe('::count()', function(){
-    it('should get number of users in datastore', function (done) {
+    it('should get number of users specified in fields', function (done) {
+      User.count({connected: true}, function (err, count) {
+        assert.equal(count, 1);
+        done();
+      });
+    });
+    it('should get number of users specified in fields', function (done) {
+      User.count({connected: false}, function (err, count) {
+        assert.equal(count, 0);
+        done();
+      });
+    });
+    it('should get number of all users if no fields options passed', function (done) {
       User.count(function (err, count) {
         assert.equal(count, 1);
         done();

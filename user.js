@@ -91,8 +91,12 @@ User.deleteAll = function(fn) {
   });
 };
 
-User.count = function(fn) {
-  users.count({}, function (err, count) {
+User.count = function(fields, fn) {
+  if (typeof (fields) === 'function') {
+    fn = fields;
+    fields = {};
+  }
+  users.count(fields, function (err, count) {
     if (err) return fn(err);
     fn(err, count);
   });
