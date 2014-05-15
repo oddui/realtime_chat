@@ -20,4 +20,20 @@ router.post('/', function(req, res) {
   });
 });
 
+router.get('/:id/users', function(req, res) {
+  Room.getById(req.params.id, function (err, room) {
+    if (err) res.send(500, err);
+
+    if (room) {
+      room.getUsers(function (err, users) {
+        if (err) res.send(500, err);
+
+        res.send(200, users);
+      });
+    } else {
+      res.send(404);
+    }
+  });
+});
+
 module.exports = router;
