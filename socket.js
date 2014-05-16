@@ -80,7 +80,7 @@ module.exports = function (server) {
     });
 
     socket.on('leave', function () {
-      if (user) {
+      if (user && user.room) {
         var to = user.room._id;
 
         user.leave(function () {
