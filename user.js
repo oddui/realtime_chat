@@ -102,37 +102,38 @@ User.count = function(fields, fn) {
   });
 };
 
-// fn is called with err and doc/numUpdated(depending on whether it's an insert or update)
+// return doc that could be saved in data store
+// eg. socket is circular structure and could
+// not be stringified and saved
+User.prototype.toDoc = function () {
+  return {
+    name: this.name,
+    room_id: this.room_id,
+    connected: this.connected,
+    lastSeenAt: new Date(),
+  };
+};
+
 User.prototype.save = function (fn) {
   var self = this;
 
   if (!self._id) {
     // insert new document
-    users.insert({
-      name: self.name,
-      room_id: self.room_id,
-      connected: self.connected,
-      lastSeenAt: new Date(),
-    }, function (err, doc) {
+    users.insert(self.toDoc(), function (err, doc) {
       if (err) return fn(err);
       debug('user %s saved', doc.name);
 
       self._id = doc._id;
-      fn(err, doc);
+      fn.call(self, err, doc);
     });
 
   } else {
     // update
-    users.update({_id: self._id}, {
-      name: self.name,
-      room_id: self.room_id,
-      connected: self.connected,
-      lastSeenAt: new Date(),
-    }, {}, function (err, numUpdated) {
+    users.update({_id: self._id}, self.toDoc(), {}, function (err, numUpdated) {
       if (err) return fn(err);
       debug('user %s updated', self.name);
 
-      fn(err, numUpdated);
+      fn.call(self, err, self.toDoc());
     });
   }
 

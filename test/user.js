@@ -150,6 +150,17 @@ describe('User', function() {
     });
   });
 
+  describe('#toDoc()', function () {
+    it('should return doc that could be save in data store', function () {
+      assert.deepEqual(firstUser.toDoc(), {
+        name: firstUser.name,
+        room_id: firstUser.room_id,
+        connected: firstUser.connected,
+        lastSeenAt: new Date(),
+      });
+    });
+  });
+
   describe('#save()', function () {
     describe('save a new user in the data store', function () {
       var user, doc;
@@ -177,8 +188,8 @@ describe('User', function() {
 
     it('should be able to update a user in the data store', function (done) {
       firstUser.name = 'Ms. 1';
-      firstUser.save(function (err, numUpdated) {
-        assert.equal(numUpdated, 1);
+      firstUser.save(function (err, updated) {
+        assert.deepEqual(updated, firstUser.toDoc());
         User.getById(firstUser._id, function (err, user) {
           assert.equal(user.name, firstUser.name);
           done();
