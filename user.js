@@ -220,13 +220,16 @@ User.prototype.echo = function (event, data) {
 User.prototype.broadcast = function (event, data, to) {
   to = to || this.room_id;
 
-  if (this.socket || to) {
+  if (this.socket && to) {
     this.socket.broadcast.to(to).emit(event, data);
     debug('%s broadcast to %s: %s', this.name, to, event);
     return this;
   }
 
   debug('%s broadcast failed: socket %s, to %s', this.name, this.socket, to);
+  this.echo('room_error', {
+    message:'broadcast failed: room undefined',
+  });
   return this;
 };
 

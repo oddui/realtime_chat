@@ -55,6 +55,8 @@ module.exports = function (server) {
     var user = socket.user;
     user.connect(socket);
 
+    // TODO: try joining last connected room
+
     socket.on('join', function (data) {
       if (user) {
         var room = Room.getById(data._id, function (err, room) {
@@ -80,7 +82,18 @@ module.exports = function (server) {
     });
 
     socket.on('leave', function () {
-      if (user && user.room) {
+      if (user) {
+
+        if (!user.room) {
+          // usually caused by os sleep and socket disconnected
+          // when os wake up, the client only reconnects to a
+          // default socket.io room but the real room
+          user.echo('room_error', {
+            message:'disconnected from room, please refresh page',
+          });
+          return;
+        }
+
         var to = user.room._id;
 
         user.leave(function () {
