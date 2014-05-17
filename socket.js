@@ -86,11 +86,12 @@ module.exports = function (server) {
 
         if (!user.room) {
           // usually caused by os sleep and socket disconnected
-          // when os wake up, the client only reconnects to a
-          // default socket.io room but the real room
+          // when os wakes up and the client could reconnect, it
+          // reconnects to default socket.io room but not the real room
           user.echo('room_error', {
             message:'disconnected from room, please refresh page',
           });
+          debug('leave failed, room is undefined');
           return;
         }
 
