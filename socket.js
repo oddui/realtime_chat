@@ -43,6 +43,11 @@ module.exports = function (server) {
           debug('authentication failed: %s', error.message);
           return next(error);
         }
+        if (user.connected) {
+          error = new Error('user has already connected');
+          debug('authentication failed: %s', error.message);
+          return next(error);
+        }
 
         socket.user = user;
         next();

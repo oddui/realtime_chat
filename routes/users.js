@@ -43,9 +43,9 @@ router.post('/session', function (req, res) {
 
   jwt.verify(token, config.token.secret, options, function(err, decoded) {
     if (err) {
-      error = new Error('invalid_token');
+      var error = new Error('invalid_token');
       debug('session failed: %s', error.message);
-      res.send(500, error);
+      res.send(401, error);
     }
 
     User.getById(decoded._id, function (err, user) {
@@ -69,6 +69,11 @@ router.post('/session', function (req, res) {
             token: token,
           });
         });
+      } else if (user.connected) {
+        // user has already connected
+        var error = new Error('already_loggedin');
+        debug('session failed: %s', error.message);
+        res.send(401, error);
       } else {
         // all good
         res.send(200, {user: user});
