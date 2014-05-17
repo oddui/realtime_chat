@@ -45,7 +45,9 @@ router.post('/session', function (req, res) {
     if (err) {
       var error = new Error('invalid_token');
       debug('session failed: %s', error.message);
-      res.send(401, error);
+      res.send(401, {
+        message: error.message,
+      });
     }
 
     User.getById(decoded._id, function (err, user) {
@@ -73,7 +75,9 @@ router.post('/session', function (req, res) {
         // user has already connected
         var error = new Error('already_loggedin');
         debug('session failed: %s', error.message);
-        res.send(401, error);
+        res.send(401, {
+          message: error.message,
+        });
       } else {
         // all good
         res.send(200, {user: user});
