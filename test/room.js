@@ -30,9 +30,9 @@ describe('Room', function(){
 
   describe('::getById()', function(){
     it('should get the room', function (done) {
-      Room.getById(firstRoom._id, function (err, room) {
+      Room.getById(firstRoom.id, function (err, room) {
         assert(room instanceof Room);
-        assert.equal(room._id, firstRoom._id);
+        assert.equal(room.id, firstRoom.id);
         done();
       });
     });
@@ -65,7 +65,7 @@ describe('Room', function(){
 
   describe('::deleteById()', function(){
     it('should delete the room from data store', function (done) {
-      Room.deleteById(firstRoom._id, function (err, numRemoved) {
+      Room.deleteById(firstRoom.id, function (err, numRemoved) {
         assert.equal(numRemoved, 1);
         done();
       });
@@ -104,11 +104,11 @@ describe('Room', function(){
         });
       });
 
-      it('doc._id should to assigned to room._id', function () {
-        assert(room._id, doc._id);
+      it('doc._id should to assigned to room.id', function () {
+        assert(room.id, doc._id);
       });
       it('room should be saved in the data store', function (done) {
-        Room.getById(room._id, function (err, r) {
+        Room.getById(room.id, function (err, r) {
           assert.equal(r.name, room.name);
           done();
         });
@@ -119,7 +119,7 @@ describe('Room', function(){
       firstRoom.name = 'Kingsville';
       firstRoom.save(function (err, numUpdated) {
         assert.equal(numUpdated, 1);
-        Room.getById(firstRoom._id, function (err, room) {
+        Room.getById(firstRoom.id, function (err, room) {
           assert.equal(room.name, firstRoom.name);
           done();
         });
@@ -138,7 +138,7 @@ describe('Room', function(){
 
   describe('#getUsers()', function () {
     beforeEach(function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.save(function () {
         done();
       });
@@ -164,7 +164,7 @@ describe('Room', function(){
       });
     });
     it('should not close a non-empty room', function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.save(function () {
         firstRoom.close(function (err, numRemoved) {
           assert.notEqual(numRemoved, 1);

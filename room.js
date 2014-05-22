@@ -12,7 +12,7 @@ var rooms = new Datastore({
 });
 
 var Room = function (doc) {
-  this._id = doc._id;
+  this.id = doc._id;
   this.name = doc.name;
   this.lang = doc.lang || 'en';
   this.capacity = doc.capacity || 5;
@@ -25,8 +25,8 @@ Room.setup = function (dep) {
   User = dep;
 };
 
-Room.getById = function (_id, fn) {
-  rooms.findOne({ _id: _id}, function (err, doc) {
+Room.getById = function (id, fn) {
+  rooms.findOne({ _id: id}, function (err, doc) {
     if (err) return fn(err);
 
     if (doc) {
@@ -62,8 +62,8 @@ Room.getByName = function (name, fn) {
   });
 };
 
-Room.deleteById = function(_id, fn) {
-  rooms.remove({_id: _id}, {}, function (err, numRemoved) {
+Room.deleteById = function(id, fn) {
+  rooms.remove({_id: id}, {}, function (err, numRemoved) {
     if (err) return fn(err);
     debug('%d room(s) deleted', numRemoved);
     if (fn) fn(err, numRemoved);
@@ -81,18 +81,18 @@ Room.deleteAll = function(fn) {
 Room.prototype.save = function (fn) {
   var self = this;
 
-  if (!self._id) {
+  if (!self.id) {
     // insert
     rooms.insert(self, function (err, doc) {
       if (err) return fn(err);
 
-      self._id = doc._id;
+      self.id = doc._id;
       debug('room %s saved', doc.name);
       fn(err, doc);
     });
   } else {
     // update
-    rooms.update({_id: self._id}, self, {}, function (err, numUpdated) {
+    rooms.update({_id: self.id}, self, {}, function (err, numUpdated) {
       if (err) return fn(err);
       debug('room %s updated', self.name);
       fn(err, numUpdated);
@@ -103,13 +103,13 @@ Room.prototype.save = function (fn) {
 };
 
 Room.prototype.destroy = function (fn) {
-  if (this._id) {
-    Room.deleteById(this._id, fn);
+  if (this.id) {
+    Room.deleteById(this.id, fn);
   }
 };
 
 Room.prototype.getUsers = function (fn) {
-  User.get({room_id: this._id}, fn.bind(this));
+  User.get({roomId: this.id}, fn.bind(this));
 };
 
 Room.prototype.close = function (fn) {

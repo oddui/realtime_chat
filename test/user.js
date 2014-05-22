@@ -62,16 +62,16 @@ describe('User', function() {
 
   describe('::getById()', function(){
     it('should get the user', function (done) {
-      User.getById(firstUser._id, function (err, user) {
+      User.getById(firstUser.id, function (err, user) {
         assert(user instanceof User);
-        assert.equal(user._id, firstUser._id);
+        assert.equal(user.id, firstUser.id);
         done();
       });
     });
     it('user should be populated', function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.save(function () {
-        User.getById(firstUser._id, function (err, user) {
+        User.getById(firstUser.id, function (err, user) {
           assert(user.room instanceof Room);
           done();
         });
@@ -106,7 +106,7 @@ describe('User', function() {
 
   describe('::deleteById()', function(){
     it('should delete the user from data store', function (done) {
-      User.deleteById(firstUser._id, function (err, numRemoved) {
+      User.deleteById(firstUser.id, function (err, numRemoved) {
         assert.equal(numRemoved, 1);
         done();
       });
@@ -131,13 +131,13 @@ describe('User', function() {
 
   describe('::count()', function(){
     it('should get number of users specified in fields', function (done) {
-      User.count({connected: true}, function (err, count) {
+      User.count({$not: {socketId: undefined}}, function (err, count) {
         assert.equal(count, 1);
         done();
       });
     });
     it('should get number of users specified in fields', function (done) {
-      User.count({connected: false}, function (err, count) {
+      User.count({connected: undefined}, function (err, count) {
         assert.equal(count, 0);
         done();
       });
@@ -154,8 +154,8 @@ describe('User', function() {
     it('should return doc that could be save in data store', function () {
       assert.deepEqual(firstUser.toDoc(), {
         name: firstUser.name,
-        room_id: firstUser.room_id,
-        connected: firstUser.connected,
+        roomId: firstUser.roomId,
+        socketId: firstUser.socket.id,
         lastSeenAt: new Date(),
       });
     });
@@ -167,20 +167,20 @@ describe('User', function() {
 
       beforeEach(function (done) {
         user = new User({name: 'Mr. 2'}, undefined);
-        user.room_id = firstRoom._id;
+        user.roomId = firstRoom.id;
         user.save(function (err, newDoc) {
           doc = newDoc;
           done();
         });
       });
 
-      it('doc._id should to assigned to user._id', function () {
-        assert(user._id, doc._id);
+      it('doc._id should to assigned to user.id', function () {
+        assert(user.id, doc._id);
       });
       it('user should be saved in the data store', function (done) {
-        User.getById(user._id, function (err, u) {
+        User.getById(user.id, function (err, u) {
           assert.equal(u.name, user.name);
-          assert.equal(u.room._id, firstRoom._id);
+          assert.equal(u.room.id, firstRoom.id);
           done();
         });
       });
@@ -190,7 +190,7 @@ describe('User', function() {
       firstUser.name = 'Ms. 1';
       firstUser.save(function (err, updated) {
         assert.deepEqual(updated, firstUser.toDoc());
-        User.getById(firstUser._id, function (err, user) {
+        User.getById(firstUser.id, function (err, user) {
           assert.equal(user.name, firstUser.name);
           done();
         });
@@ -200,13 +200,13 @@ describe('User', function() {
 
   describe('#populate()', function () {
     it('should populate user.room as a room object', function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.populate(function (err, user) {
         assert(user.room instanceof Room);
         done();
       });
     });
-    it('should do nothing if user.room_id is undefined', function (done) {
+    it('should do nothing if user.roomId is undefined', function (done) {
       firstUser.populate(function (err, user) {
         assert(!user.room);
         done();
@@ -228,15 +228,15 @@ describe('User', function() {
       firstUser.room = firstRoom;
       firstUser.getRoom(function (err, room) {
         assert(room instanceof Room);
-        assert(room._id, firstRoom._id);
+        assert(room.id, firstRoom.id);
         done();
       });
     });
     it('should first populated the room if not populated', function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.getRoom(function (err, room) {
         assert(room instanceof Room);
-        assert(room._id, firstRoom._id);
+        assert(room.id, firstRoom.id);
         done();
       });
     });
@@ -246,9 +246,9 @@ describe('User', function() {
     var fakeSocket, user;
 
     beforeEach(function (done) {
-      fakeSocket = 'socket';
+      fakeSocket = {id: '1'};
       firstUser.connect(fakeSocket, function () {
-        User.getById(firstUser._id, function (err, u) {
+        User.getById(firstUser.id, function (err, u) {
           user = u;
           done();
         });
@@ -256,16 +256,16 @@ describe('User', function() {
     });
 
     it('should assign socket', function () {
-      assert.equal(firstUser.socket, fakeSocket);
+      assert.deepEqual(firstUser.socket, fakeSocket);
     });
-    it('should assign socket', function () {
-      assert(user.connected);
+    it('should assign socket id', function () {
+      assert.equal(user.socketId, fakeSocket.id);
     });
   });
 
   describe('#disconnect()', function () {
     beforeEach(function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.save(function () {
         firstUser.disconnect(function () {
           done();
@@ -274,16 +274,16 @@ describe('User', function() {
     });
 
     it('should leave room', function (done) {
-      assert.equal(firstUser.room_id, undefined);
-      User.getById(firstUser._id, function (err, user) {
-        assert.equal(user.room_id, undefined);
+      assert.equal(firstUser.roomId, undefined);
+      User.getById(firstUser.id, function (err, user) {
+        assert.equal(user.roomId, undefined);
         done();
       });
     });
 
     it('should not be connected', function (done) {
-      assert.equal(firstUser.connected, false);
-      User.getById(firstUser._id, function (err, user) {
+      assert.equal(firstUser.socketID, undefined);
+      User.getById(firstUser.id, function (err, user) {
         assert(!user.connected);
         done();
       });
@@ -308,27 +308,27 @@ describe('User', function() {
     it('should join a room', function (done) {
       firstUser.join(firstRoom, function () {
         assert.equal(firstUser.room, firstRoom);
-        assert.equal(firstUser.room_id, firstRoom._id);
+        assert.equal(firstUser.roomId, firstRoom.id);
 
-        User.getById(firstUser._id, function (err, user) {
-          assert.equal(user.room_id, firstRoom._id);
+        User.getById(firstUser.id, function (err, user) {
+          assert.equal(user.roomId, firstRoom.id);
           done();
         });
       });
     });
     it('socket should join a room', function(done){
       firstUser.join(firstRoom, function () {
-        assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom._id));
+        assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom.id));
         done();
       });
     });
     it('should first leave the room if user already in a room', function(done){
       firstUser.join(firstRoom, function () {
-        assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom._id));
+        assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom.id));
 
         var anotherRoom = new Room('Kingsville');
         firstUser.join(anotherRoom, function () {
-          assert.equal(-1, firstUser.socket.rooms.indexOf(firstRoom._id));
+          assert.equal(-1, firstUser.socket.rooms.indexOf(firstRoom.id));
 
           assert.equal(firstUser.room, anotherRoom);
           done();
@@ -340,9 +340,9 @@ describe('User', function() {
   describe('#leave()', function(){
 
     beforeEach(function (done) {
-      firstUser.room_id = firstRoom._id;
+      firstUser.roomId = firstRoom.id;
       firstUser.save(function () {
-        firstUser.socket.join(firstRoom._id, function () {
+        firstUser.socket.join(firstRoom.id, function () {
           done();
         });
       });
@@ -350,17 +350,17 @@ describe('User', function() {
 
     it('should leave a room', function (done) {
       firstUser.leave(function () {
-        assert.equal(firstUser.room_id, undefined);
+        assert.equal(firstUser.roomId, undefined);
         assert.equal(firstUser.room, undefined);
 
-        User.getById(firstUser._id, function (err, user) {
-          assert.equal(user.room_id, undefined);
+        User.getById(firstUser.id, function (err, user) {
+          assert.equal(user.roomId, undefined);
           done();
         });
       });
     });
     it('socket should leave a room', function (done) {
-      assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom._id));
+      assert.notEqual(-1, firstUser.socket.rooms.indexOf(firstRoom.id));
 
       firstUser.leave(function () {
         assert.equal(-1, firstUser.socket.rooms.indexOf(firstRoom.name));

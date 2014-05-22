@@ -75,6 +75,7 @@ module.exports = function (server) {
 
           // join room
           user.join(room, function () {
+            console.log(socket);
             user.echo('join_response', {
               success: true,
             });

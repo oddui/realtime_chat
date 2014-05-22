@@ -13,10 +13,10 @@ var users = new Datastore({
 
 // user object
 var User = function (doc) {
-  this._id = doc._id;
+  this.id = doc._id;
   this.name = doc.name;
-  this.room_id = doc.room_id;
-  this.connected = doc.connected;
+  this.roomId = doc.roomId;
+  this.socketId = doc.socketId;
   this.lastSeenAt = doc.lastSeenAt;
 };
 
@@ -26,8 +26,8 @@ User.setup = function (dep) {
   Room = dep;
 };
 
-User.getById = function (_id, fn) {
-  users.findOne({ _id: _id}, function (err, doc) {
+User.getById = function (id, fn) {
+  users.findOne({_id: id}, function (err, doc) {
     if (err) return fn(err);
 
     if (doc) {
@@ -75,8 +75,8 @@ User.getByName = function (name, fn) {
   });
 };
 
-User.deleteById = function(_id, fn) {
-  users.remove({_id: _id}, {}, function (err, numRemoved) {
+User.deleteById = function(id, fn) {
+  users.remove({_id: id}, {}, function (err, numRemoved) {
     if (err) return fn(err);
     debug('%d user(s) deleted', numRemoved);
     if (fn) fn(err, numRemoved);
@@ -108,8 +108,8 @@ User.count = function(fields, fn) {
 User.prototype.toDoc = function () {
   return {
     name: this.name,
-    room_id: this.room_id,
-    connected: this.connected,
+    roomId: this.roomId,
+    socketId: this.socket ? this.socket.id : undefined,
     lastSeenAt: new Date(),
   };
 };
@@ -117,19 +117,19 @@ User.prototype.toDoc = function () {
 User.prototype.save = function (fn) {
   var self = this;
 
-  if (!self._id) {
+  if (!self.id) {
     // insert new document
     users.insert(self.toDoc(), function (err, doc) {
       if (err) return fn(err);
       debug('user %s saved', doc.name);
 
-      self._id = doc._id;
+      self.id = doc._id;
       fn.call(self, err, doc);
     });
 
   } else {
     // update
-    users.update({_id: self._id}, self.toDoc(), {}, function (err, numUpdated) {
+    users.update({_id: self.id}, self.toDoc(), {}, function (err, numUpdated) {
       if (err) return fn(err);
       debug('user %s updated', self.name);
 
@@ -144,8 +144,8 @@ User.prototype.save = function (fn) {
 User.prototype.populate = function (fn) {
   var self = this;
 
-  if (self.room_id && !(self.room instanceof Room)) {
-    Room.getById(self.room_id, function (err, room) {
+  if (self.roomId && !(self.room instanceof Room)) {
+    Room.getById(self.roomId, function (err, room) {
       if (err) return fn.call(self, err);
       // TODO: what about room not found
       //
@@ -160,8 +160,8 @@ User.prototype.populate = function (fn) {
 };
 
 User.prototype.destroy = function (fn) {
-  if (this._id) {
-    User.deleteById(this._id, fn);
+  if (this.id) {
+    User.deleteById(this.id, fn);
   }
 };
 
@@ -179,7 +179,6 @@ User.prototype.getRoom = function (fn) {
 User.prototype.connect = function (socket, fn) {
   var self = this;
   this.socket = socket;
-  this.connected = true;
   this.save(function (err) {
     if (err) {
       if (fn) fn.call(self, err);
@@ -196,7 +195,6 @@ User.prototype.disconnect = function (fn) {
   return this.leave(function (err) {
     if (err) return fn.call(this, err);
 
-    this.connected = false;
     this.save(function () {
       if (err) return fn.call(this, err);
 
@@ -204,6 +202,10 @@ User.prototype.disconnect = function (fn) {
       if (fn) fn.call(this);
     });
   });
+};
+
+User.prototype.isConnected = function () {
+  return !!this.socket;
 };
 
 User.prototype.echo = function (event, data) {
@@ -218,7 +220,7 @@ User.prototype.echo = function (event, data) {
 };
 
 User.prototype.broadcast = function (event, data, to) {
-  to = to || this.room_id;
+  to = to || this.roomId;
 
   if (this.socket && to) {
     this.socket.broadcast.to(to).emit(event, data);
@@ -237,9 +239,9 @@ User.prototype.join = function (room, fn) {
   // leave current room if possible
   return this.leave(function () {
     var self = this;
-    this.socket.join(room._id, function () {
+    this.socket.join(room.id, function () {
 
-      self.room_id = room._id;
+      self.roomId = room.id;
       self.room = room;
       self.save(function () {
         debug('%s joined room %s', self.name, self.room.name);
@@ -250,14 +252,14 @@ User.prototype.join = function (room, fn) {
 };
 
 User.prototype.leave = function (fn) {
-  if (this.room_id) {
+  if (this.roomId) {
     var self = this;
 
     var leave = function () {
-      self.socket.leave(self.room_id, function () {
+      self.socket.leave(self.roomId, function () {
         var room = self.room;
 
-        self.room_id = undefined;
+        self.roomId = undefined;
         self.room = undefined;
         self.save(function () {
           debug('%s left room %s', self.name, room.name);
