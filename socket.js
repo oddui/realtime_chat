@@ -33,7 +33,6 @@ module.exports = function (server) {
         return next(error);
       }
 
-      console.log(decoded);
       User.getById(decoded.id, function (err, user) {
         if (err) {
           debug('authentication failed: %s', err.message);
@@ -44,10 +43,14 @@ module.exports = function (server) {
           debug('authentication failed: %s', error.message);
           return next(error);
         }
-        if (user.connected) {
-          error = new Error('user has already connected');
-          debug('authentication failed: %s', error.message);
-          return next(error);
+        if (user.socketId !== socket.id) {
+          var oldSocket = io.sockets.connected[user.socketId];
+          if (oldSocket) {
+            oldSocket.emit('stale_socket');
+            // client should disconnect the socket
+
+            debug('found old socket %s', oldSocket.id);
+          }
         }
 
         socket.user = user;

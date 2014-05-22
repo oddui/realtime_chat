@@ -71,13 +71,6 @@ router.post('/session', function (req, res) {
             token: token,
           });
         });
-      } else if (user.connected) {
-        // user has already connected
-        var error = new Error('already_loggedin');
-        debug('session failed: %s', error.message);
-        res.send(401, {
-          message: error.message,
-        });
       } else {
         // all good
         res.send(200, {user: user});
