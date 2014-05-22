@@ -33,7 +33,8 @@ module.exports = function (server) {
         return next(error);
       }
 
-      User.getById(decoded._id, function (err, user) {
+      console.log(decoded);
+      User.getById(decoded.id, function (err, user) {
         if (err) {
           debug('authentication failed: %s', err.message);
           return next(err);
@@ -64,7 +65,7 @@ module.exports = function (server) {
 
     socket.on('join', function (data) {
       if (user) {
-        var room = Room.getById(data._id, function (err, room) {
+        var room = Room.getById(data.id, function (err, room) {
           // if db err or room not exist
           if (err || !room) {
             return user.echo('join_response', {
@@ -101,7 +102,7 @@ module.exports = function (server) {
           return;
         }
 
-        var to = user.room._id;
+        var to = user.room.id;
 
         user.leave(function () {
           user.echo('leave_response', {
@@ -145,7 +146,7 @@ module.exports = function (server) {
     // when the user disconnects.. perform this
     socket.on('disconnect', function () {
       if (user) {
-        if (user.room) var to = user.room._id;
+        if (user.room) var to = user.room.id;
 
         user.disconnect(function () {
           user.broadcast('user_left', {
