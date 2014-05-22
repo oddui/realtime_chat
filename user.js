@@ -147,14 +147,22 @@ User.prototype.populate = function (fn) {
   if (self.roomId && !(self.room instanceof Room)) {
     Room.getById(self.roomId, function (err, room) {
       if (err) return fn.call(self, err);
-      // TODO: what about room not found
-      //
+
+      // room not found
+      if (!room) {
+        self.roomId = undefined;
+        return self.save(function () {
+          debug('populate failed: room not found, set roomId to undefined');
+          fn.call(self, err, self);
+        });
+      }
+
       self.room = room;
       debug('%s populated, room name: %s', self.name, room.name);
-      if (fn) fn.call(self, err, self);
+      fn.call(self, err, self);
     });
   } else {
-    if (fn) process.nextTick(fn.bind(self, undefined, self));
+    process.nextTick(fn.bind(self, undefined, self));
   }
   return self;
 };
@@ -177,16 +185,15 @@ User.prototype.getRoom = function (fn) {
 };
 
 User.prototype.connect = function (socket, fn) {
-  var self = this;
   this.socket = socket;
   this.save(function (err) {
     if (err) {
-      if (fn) fn.call(self, err);
+      if (fn) fn.call(this, err);
       return;
     }
 
-    debug('%s connected', self.name);
-    if (fn) fn.call(self);
+    debug('%s connected', this.name);
+    if (fn) fn.call(this);
   });
   return this;
 };
@@ -229,9 +236,12 @@ User.prototype.broadcast = function (event, data, to) {
   }
 
   debug('%s broadcast failed: socket %s, to %s', this.name, this.socket, to);
-  this.echo('room_error', {
-    message:'broadcast failed: room undefined',
-  });
+
+  if (!to) {
+    this.echo('room_error', {
+      message:'broadcast failed: room undefined',
+    });
+  }
   return this;
 };
 

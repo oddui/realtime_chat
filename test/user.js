@@ -25,6 +25,7 @@ describe('User', function() {
 
       client.on('connect', function() {
         client.on('disconnect', function() {
+          //console.log('socket disconnected...');
         });
         done();
       });
@@ -41,7 +42,9 @@ describe('User', function() {
   });
 
   beforeEach(function (done) {
-    firstUser = new User({name: 'Mr. 1'});
+    firstUser = new User({
+      name: 'Mr. 1',
+    });
     firstRoom = new Room({
       name: 'Seddon',
       lang: 'en',
@@ -75,6 +78,22 @@ describe('User', function() {
           assert(user.room instanceof Room);
           done();
         });
+      });
+    });
+  });
+
+  describe('::get()', function(){
+    it('should get queried users array', function (done) {
+      // get firstUser
+      User.get({name: firstUser.name}, function (err, users) {
+        assert(users instanceof Array);
+        assert.equal(users.length, 1);
+
+        assert.equal(users[0].id, firstUser.id);
+        users.forEach(function (user) {
+          assert(user instanceof User);
+        });
+        done();
       });
     });
   });
@@ -212,6 +231,14 @@ describe('User', function() {
         done();
       });
     });
+    it('should set roomId to undefined if room does not exist', function (done) {
+      firstUser.roomId = 'badid';
+      firstUser.populate(function (err, user) {
+        assert(!user.roomId);
+        assert(!user.room);
+        done();
+      });
+    });
   });
 
   describe('#destroy()', function () {
@@ -223,7 +250,7 @@ describe('User', function() {
     });
   });
 
-  describe('#getRoomm()', function () {
+  describe('#getRoom()', function () {
     it('should get room', function (done) {
       firstUser.room = firstRoom;
       firstUser.getRoom(function (err, room) {
@@ -287,6 +314,12 @@ describe('User', function() {
         assert(!user.connected);
         done();
       });
+    });
+  });
+
+  describe('#disconnect()', function () {
+    it('should return true if user has socket connection', function () {
+      assert(firstUser.isConnected());
     });
   });
 
