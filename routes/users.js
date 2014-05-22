@@ -15,7 +15,7 @@ router.get('/', function(req, res) {
 
 /* get number of connected users */
 router.get('/count', function(req, res) {
-  User.count({$not: {socketId: undefined}}, function (err, count) {
+  User.count({socketId: {$exists: true}}, function (err, count) {
     if (err) res.send(500, err);
     res.send({count: count});
   });

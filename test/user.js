@@ -150,13 +150,13 @@ describe('User', function() {
 
   describe('::count()', function(){
     it('should get number of users specified in fields', function (done) {
-      User.count({$not: {socketId: undefined}}, function (err, count) {
+      User.count({socketId: {$exists: true}}, function (err, count) {
         assert.equal(count, 1);
         done();
       });
     });
     it('should get number of users specified in fields', function (done) {
-      User.count({connected: undefined}, function (err, count) {
+      User.count({socketId: {$exists: false}}, function (err, count) {
         assert.equal(count, 0);
         done();
       });

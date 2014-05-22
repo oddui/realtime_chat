@@ -202,6 +202,7 @@ User.prototype.disconnect = function (fn) {
   return this.leave(function (err) {
     if (err) return fn.call(this, err);
 
+    this.socket = undefined;
     this.save(function () {
       if (err) return fn.call(this, err);
 

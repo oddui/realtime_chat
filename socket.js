@@ -149,12 +149,11 @@ module.exports = function (server) {
     // when the user disconnects.. perform this
     socket.on('disconnect', function () {
       if (user) {
-        if (user.room) var to = user.room.id;
+        user.broadcast('user_left', {
+          username: user.name,
+        });
 
         user.disconnect(function () {
-          user.broadcast('user_left', {
-            username: user.name,
-          }, to);
         });
       }
     });
