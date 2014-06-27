@@ -1,7 +1,11 @@
 var debug = require('debug')('rtc:routes');
 var express = require('express');
 var router = express.Router();
+var utils = require('./utils');
 var Room = require('../room');
+
+router.use(utils.cors);
+router.use(utils.expiresNow);
 
 /* GET rooms listing. */
 router.get('/', function(req, res) {

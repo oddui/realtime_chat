@@ -3,7 +3,11 @@ var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
 var config = require('../config');
+var utils = require('./utils');
 var User = require('../user');
+
+router.use(utils.cors);
+router.use(utils.expiresNow);
 
 /* GET users listing. */
 router.get('/', function(req, res) {
