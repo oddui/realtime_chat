@@ -17,8 +17,16 @@ router.get('/', function(req, res) {
   });
 });
 
-/* get number of connected users */
+/* get number of users */
 router.get('/count', function(req, res) {
+  User.count({}, function (err, count) {
+    if (err) res.send(500, err);
+    res.send({count: count});
+  });
+});
+
+/* get number of connected users */
+router.get('/count/connected', function(req, res) {
   User.count({socketId: {$exists: true}}, function (err, count) {
     if (err) res.send(500, err);
     res.send({count: count});
