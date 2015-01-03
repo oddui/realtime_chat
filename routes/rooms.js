@@ -1,43 +1,24 @@
-var debug = require('debug')('rtc:routes');
 var express = require('express');
 var router = express.Router();
-var utils = require('./utils');
-var Room = require('../room');
 
-router.use(utils.cors);
-router.use(utils.expiresNow);
-
-/* GET rooms listing. */
 router.get('/', function(req, res) {
-  Room.getAll(function (err, rooms) {
-    if (err) res.send(500, err);
-    res.send(200, rooms);
-  });
+  res.send('respond with a resource');
 });
 
-/* Create a new room */
 router.post('/', function(req, res) {
-  var room = new Room(req.body);
-  room.save(function (err, room) {
-    if (err) res.send(500, err);
-    res.send(200);
-  });
+  res.send('respond with a resource');
 });
 
-router.get('/:id/users', function(req, res) {
-  Room.getById(req.params.id, function (err, room) {
-    if (err) res.send(500, err);
+router.get('/:id', function(req, res) {
+  res.send('respond with a resource');
+});
 
-    if (room) {
-      room.getUsers(function (err, users) {
-        if (err) res.send(500, err);
+router.put('/:id', function(req, res) {
+  res.send('respond with a resource');
+});
 
-        res.send(200, users);
-      });
-    } else {
-      res.send(404);
-    }
-  });
+router.delete('/:id', function(req, res) {
+  res.send('respond with a resource');
 });
 
 module.exports = router;

@@ -1,0 +1,10 @@
+{
+  "users": [
+    { "name": "Admin", "role": "admin", "email": "admin@durarara.me", "password": "password" }, 
+    { "name": "Owner", "role": "owner", "provider": "weibo", "uuid": "1" }, 
+    { "name": "User", "role": "user", "provider": "weibo", "uuid": "2" } 
+  ],
+
+  "rooms": [
+  ]
+}

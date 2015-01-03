@@ -1,10 +1,21 @@
 var path = require('path');
-var env = process.env.NODE_ENV || 'development';
-var config = require(path.join(__dirname,  (env + '.json')));
+var extend = require('util')._extend;
 
-config.port = process.env.PORT || config.app.port || 3000;
+var development = require('./env/development');
+var test = require('./env/test');
+var production = require('./env/production');
 
-config.client.name = config.client.name || 'basic';
-config.client.path = path.join('client', config.client.name, config.client.path);
+var defaults = {
+  root: path.normalize(__dirname + '/..'),
+  secret: 'secret',
+};
 
-module.exports = config;
+/**
+ * Expose
+ */
+
+module.exports = {
+  development: extend(defaults, development),
+  test: extend(defaults, test),
+  production: extend(defaults, production)
+}[process.env.NODE_ENV || 'development'];

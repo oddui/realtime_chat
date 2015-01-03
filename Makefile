@@ -1,8 +1,10 @@
 REPORTER = spec
+TESTS = test/**/*.js test/**/**/*.js
 
 test:
-	NODE_ENV=test ./node_modules/.bin/mocha \
+	@NODE_ENV=test ./node_modules/.bin/mocha \
 		--reporter $(REPORTER) \
-		test/*.js
+		--ui tdd \
+		$(TESTS)
 
 .PHONY: test
