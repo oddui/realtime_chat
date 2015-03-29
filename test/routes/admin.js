@@ -16,7 +16,9 @@ describe('admin', function () {
 
   before(function (done) {
     User.create(fixtures.users)
-    .then(function (admin, owner, user) {
+    .then(function (users) {
+      var admin = users[0],
+      user = users[1];
       userToken = sign(user.toObject(), config.secret);
       adminToken = sign(admin.toObject(), config.secret);
       headers['Authorization'] = 'Bearer '+adminToken;
