@@ -1,9 +1,9 @@
 {
-  "users": [
-    { "name": "Admin", "role": "admin", "email": "admin@durarara.me", "password": "password" },
-    { "name": "Owner", "role": "owner", "provider": "weibo", "uuid": "1" },
-    { "name": "User", "role": "user", "provider": "weibo", "uuid": "2" }
-  ],
+  "users": {
+    "admin": { "name": "Admin", "role": "admin", "email": "admin@durarara.me", "password": "password" },
+    "owner":  { "name": "Owner", "role": "owner", "provider": "weibo", "uuid": "uuid1" },
+    "user":  { "name": "User", "role": "user", "provider": "weibo", "uuid": "uuid2" }
+  },
 
   "rooms": [
   ]

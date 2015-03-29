@@ -15,13 +15,16 @@ describe('admin', function () {
   };
 
   before(function (done) {
-    User.create(fixtures.users)
-    .then(function (users) {
-      var admin = users[0],
-      user = users[1];
-      userToken = sign(user.toObject(), config.secret);
+    User.create(fixtures.users.admin)
+    .then(function (admin) {
       adminToken = sign(admin.toObject(), config.secret);
       headers['Authorization'] = 'Bearer '+adminToken;
+    })
+    .then(function () {
+      return User.create(fixtures.users.user);
+    })
+    .then(function (user) {
+      userToken = sign(user.toObject(), config.secret);
     })
     .then(done)
     .then(null, done);

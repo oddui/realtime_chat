@@ -15,11 +15,9 @@ describe('users', function () {
   };
 
   before(function (done) {
-    User.create(fixtures.users)
-    .then(function (users) {
-      var user = users[1];
-      var token = sign(user.toObject(), config.secret);
-      headers['Authorization'] = 'Bearer '+token;
+    User.create(fixtures.users.user)
+    .then(function (user) {
+      headers['Authorization'] = 'Bearer ' + sign(user.toObject(), config.secret);
     })
     .then(done)
     .then(null, done);
@@ -34,13 +32,13 @@ describe('users', function () {
   describe.skip('POST /users/login', function () {
   });
   describe('POST /users/verify', function () {
-    it('should not be verified with a bad token', function (done) {
+    it('should not verify a bad token', function (done) {
       request(app)
       .post('/users/verify')
       .set('Authorization', 'Bearer invalidtoken')
       .expect(401, done);
     });
-    it('should be verified with a right token', function (done) {
+    it('should verify a right token', function (done) {
       request(app)
       .post('/users/verify')
       .set(headers)
@@ -49,12 +47,16 @@ describe('users', function () {
     });
   });
   describe('GET /users/me', function () {
-    it('should return user', function (done) {
+    it('should return the user', function (done) {
       request(app)
       .get('/users/me')
       .set(headers)
+      .expect(200)
       .expect('Content-Type', /json/)
-      .expect(200, done);
+      .expect(function (res) {
+        expect(res.body.name).to.eql(fixtures.users.user.name);
+      })
+      .end(done);
     });
   });
   describe('PUT /users/me', function () {
@@ -65,8 +67,8 @@ describe('users', function () {
       .send({
         name: 'Changed',
       })
-      .expect('Content-Type', /json/)
       .expect(200)
+      .expect('Content-Type', /json/)
       .end(function () {
         request(app)
         .get('/users/me')
