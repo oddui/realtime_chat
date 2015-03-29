@@ -17,7 +17,7 @@ describe('User', function () {
       // database fixtures
       var fixtures = require('../fixtures.json');
 
-      User.create(fixtures.users)
+      User.create(_.values(fixtures.users))
       .then(function () {
         done();
       })
